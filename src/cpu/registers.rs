@@ -3,31 +3,33 @@ const SUBTRACT_FLAG_BYTE_POSITION: u8 = 6;
 const HALF_CARRY_FLAG_BYTE_POSITION: u8 = 5;
 const CARRY_FLAG_BYTE_POSITION: u8 = 4;
 
-struct Registers {
-    a: u8,
-    b: u8,
-    c: u8,
-    d: u8,
-    e: u8,
-    f: FlagRegister,
-    h: u8,
-    l: u8,
+pub (super) struct Registers {
+    pub (super) a: u8,
+    pub (super) b: u8,
+    pub (super) c: u8,
+    pub (super) d: u8,
+    pub (super) e: u8,
+    pub (super) f: FlagRegister,
+    pub (super) h: u8,
+    pub (super) l: u8,
 }
 
-struct FlagRegister {
-    zero: bool,
-    subtract: bool,
-    half_carry: bool,
-    carry: bool
+pub (super) struct FlagRegister {
+    pub (super) zero: bool,
+    pub (super) subtract: bool,
+    pub (super) half_carry: bool,
+    pub (super) carry: bool
 }
 
 impl Registers {
     fn get_af(&self) -> u16 {
-        join_u8(self.a, self.f)
+        join_u8(self.a, u8::from(&self.f))
     }
 
     fn set_af(&mut self, value: u16){
-        (self.a, self.f) = split_u16(value);
+        let f;
+        (self.a, f) = split_u16(value);
+        self.f = FlagRegister::from(f);
     }
 
     fn get_bc(&self) -> u16 {
