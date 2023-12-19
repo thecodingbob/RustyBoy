@@ -98,7 +98,7 @@ fn split_u16(value: u16) -> (u8, u8){
 
 #[cfg(test)]
 mod test{
-    use crate::core::registers::split_u16;
+    use crate::core::registers::{join_u8, split_u16};
 
     #[test]
     fn test_split_u16(){
@@ -106,5 +106,11 @@ mod test{
 
         assert_eq!(0xAB, a);
         assert_eq!(0xCD, b);
+    }
+
+    #[test]
+    fn test_join_u16(){
+        assert_eq!(0xABCD, join_u8(0xAB, 0xCD));
+        assert_eq!(0xCD, join_u8(0x0, 0xCD));
     }
 }

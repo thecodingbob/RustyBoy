@@ -64,7 +64,7 @@ impl CPU {
 
         let (mut new_value, mut did_overflow) = self.registers.a.overflowing_add(value);
 
-        let mut carry_did_overflow;
+        let carry_did_overflow;
         (new_value, carry_did_overflow) = new_value.overflowing_add(carry_value);
         did_overflow = did_overflow || carry_did_overflow;
 
@@ -94,7 +94,7 @@ impl CPU {
 #[cfg(test)]
 mod test{
     use crate::core::cpu::CPU;
-    use crate::core::instructions::{ArithmeticTarget, ArithmeticTarget16};
+    use crate::core::instructions::{ArithmeticTarget, ArithmeticTarget16, Instruction};
     use crate::core::registers::{FlagRegister, Registers};
 
     fn initialize_cpu() -> CPU {
@@ -105,12 +105,7 @@ mod test{
                 c: 0,
                 d: 0,
                 e: 0,
-                f: FlagRegister{
-                    zero: false,
-                    subtract: false,
-                    half_carry: false,
-                    carry: false,
-                },
+                f: FlagRegister::from(0b0),
                 h: 0,
                 l: 0
             }
@@ -123,12 +118,7 @@ mod test{
         cpu.add_constant(1);
 
         assert_eq!(1, cpu.registers.a);
-        assert_eq!(FlagRegister{
-            zero: false,
-            subtract: false,
-            half_carry: false,
-            carry: false
-        }, cpu.registers.f);
+        assert_eq!(FlagRegister::from(0b0), cpu.registers.f);
     }
 
     #[test]
@@ -205,12 +195,7 @@ mod test{
         cpu.add_constant_carry(0x0);
 
         assert_eq!(0x1, cpu.registers.a);
-        assert_eq!(FlagRegister{
-            zero: false,
-            subtract: false,
-            half_carry: false,
-            carry: false
-        }, cpu.registers.f);
+        assert_eq!(FlagRegister::from(0b0), cpu.registers.f);
     }
 
     #[test]
@@ -238,12 +223,7 @@ mod test{
         cpu.adc(ArithmeticTarget::E);
 
         assert_eq!(0x13, cpu.registers.a);
-        assert_eq!(FlagRegister{
-            zero: false,
-            subtract: false,
-            half_carry: false,
-            carry: false
-        }, cpu.registers.f);
+        assert_eq!(FlagRegister::from(0b0), cpu.registers.f);
     }
 
     #[test]
@@ -253,12 +233,7 @@ mod test{
         cpu.add_constant_16(0xABCD);
         assert_eq!(0xAB, cpu.registers.h);
         assert_eq!(0xCD, cpu.registers.l);
-        assert_eq!(FlagRegister{
-            zero: false,
-            subtract: false,
-            half_carry: false,
-            carry: false
-        }, cpu.registers.f);
+        assert_eq!(FlagRegister::from(0b0), cpu.registers.f);
     }
 
     #[test]
@@ -283,24 +258,25 @@ mod test{
         cpu.registers.set_bc(0x1234);
 
         cpu.add_hl(ArithmeticTarget16::BC);
+
         assert_eq!(0x12, cpu.registers.h);
         assert_eq!(0x34, cpu.registers.l);
-        assert_eq!(FlagRegister{
-            zero: false,
-            subtract: false,
-            half_carry: false,
-            carry: false
-        }, cpu.registers.f);
+        assert_eq!(FlagRegister::from(0b0), cpu.registers.f);
 
         cpu.add_hl(ArithmeticTarget16::HL);
+
         assert_eq!(0x24, cpu.registers.h);
         assert_eq!(0x68, cpu.registers.l);
-        assert_eq!(FlagRegister{
-            zero: false,
-            subtract: false,
-            half_carry: false,
-            carry: false
-        }, cpu.registers.f);
+        assert_eq!(FlagRegister::from(0b0), cpu.registers.f);
+    }
 
+    #[test]
+    fn test_execute(){
+        let mut cpu = initialize_cpu();
+        cpu.registers.a = 0x1;
+
+        cpu.execute(Instruction::ADD(ArithmeticTarget::A));
+
+        assert_eq!(0x2, cpu.registers.a);
     }
 }
