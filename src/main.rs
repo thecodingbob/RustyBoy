@@ -1,9 +1,5 @@
-mod cpu;
+mod core;
 
 fn main() {
     println!("Hello, world!");
-}
-
-fn cazzola() -> u16 {
-    1
 }

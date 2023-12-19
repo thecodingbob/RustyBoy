@@ -3,6 +3,7 @@ const SUBTRACT_FLAG_BYTE_POSITION: u8 = 6;
 const HALF_CARRY_FLAG_BYTE_POSITION: u8 = 5;
 const CARRY_FLAG_BYTE_POSITION: u8 = 4;
 
+#[derive(Debug)]
 pub (super) struct Registers {
     pub (super) a: u8,
     pub (super) b: u8,
@@ -14,6 +15,8 @@ pub (super) struct Registers {
     pub (super) l: u8,
 }
 
+#[derive(PartialEq)]
+#[derive(Debug)]
 pub (super) struct FlagRegister {
     pub (super) zero: bool,
     pub (super) subtract: bool,
@@ -22,43 +25,43 @@ pub (super) struct FlagRegister {
 }
 
 impl Registers {
-    fn get_af(&self) -> u16 {
+    pub (super) fn get_af(&self) -> u16 {
         join_u8(self.a, u8::from(&self.f))
     }
 
-    fn set_af(&mut self, value: u16){
+    pub (super) fn set_af(&mut self, value: u16){
         let f;
         (self.a, f) = split_u16(value);
         self.f = FlagRegister::from(f);
     }
 
-    fn get_bc(&self) -> u16 {
+    pub (super) fn get_bc(&self) -> u16 {
         join_u8(self.b, self.c)
     }
 
-    fn set_bc(&mut self, value: u16){
+    pub (super) fn set_bc(&mut self, value: u16){
         (self.b, self.c) = split_u16(value);
     }
 
-    fn get_de(&self) -> u16 {
+    pub (super) fn get_de(&self) -> u16 {
         join_u8(self.d, self.e)
     }
 
-    fn set_de(&mut self, value: u16){
+    pub (super) fn set_de(&mut self, value: u16){
         (self.d, self.e) = split_u16(value);
     }
 
-    fn get_hl(&self) -> u16 {
+    pub (super) fn get_hl(&self) -> u16 {
         join_u8(self.h, self.l)
     }
 
-    fn set_hl(&mut self, value: u16){
+    pub (super) fn set_hl(&mut self, value: u16){
         (self.h, self.l) = split_u16(value);
     }
 }
 
-impl std::convert::From<FlagsRegister> for u8 {
-    fn from(flag: FlagsRegister) -> u8 {
+impl From<&FlagRegister> for u8 {
+    fn from(flag: &FlagRegister) -> u8 {
         (if flag.zero { 1 } else { 0 }) << ZERO_FLAG_BYTE_POSITION |
         (if flag.subtract { 1 } else { 0 }) << SUBTRACT_FLAG_BYTE_POSITION |
         (if flag.half_carry { 1 } else { 0 }) << HALF_CARRY_FLAG_BYTE_POSITION |
@@ -66,14 +69,14 @@ impl std::convert::From<FlagsRegister> for u8 {
     }
 }
 
-impl std::convert::From<u8> for FlagRegister {
+impl From<u8> for FlagRegister {
     fn from(byte: u8) -> Self {
         let zero = ((byte >> ZERO_FLAG_BYTE_POSITION) & 0b1) != 0;
         let subtract = ((byte >> SUBTRACT_FLAG_BYTE_POSITION) & 0b1) != 0;
         let half_carry = ((byte >> HALF_CARRY_FLAG_BYTE_POSITION) & 0b1) != 0;
         let carry = ((byte >> CARRY_FLAG_BYTE_POSITION) & 0b1) != 0;
 
-        FlagsRegister {
+        FlagRegister {
             zero,
             subtract,
             half_carry,
@@ -91,4 +94,17 @@ fn split_u16(value: u16) -> (u8, u8){
         ((value & 0xFF00) >> 8) as u8,
         (value & 0xFF) as u8
     )
+}
+
+#[cfg(test)]
+mod test{
+    use crate::core::registers::split_u16;
+
+    #[test]
+    fn test_split_u16(){
+        let (a, b) = split_u16(0xABCD);
+
+        assert_eq!(0xAB, a);
+        assert_eq!(0xCD, b);
+    }
 }
