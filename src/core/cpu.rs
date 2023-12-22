@@ -4,8 +4,7 @@ use crate::core::registers::Registers;
 #[derive(Debug)]
 struct CPU {
     registers: Registers,
-    program_counter: u16,
-    stack_pointer: u16
+    program_counter: u16
 }
 impl CPU {
     fn execute(&mut self, instruction: Instruction) {
@@ -20,34 +19,65 @@ impl CPU {
                 self.adc(target)
             },
             Instruction::LDR(source, receiver) => {
-                *self.get_target_register(receiver) = self.get_target_value(source)
+                *self.get_register_pointer(receiver) = self.get_register_value(source)
             },
-            Instruction::LDN(receiver) => {
-                let value = self.pop_stack();
-                *self.get_target_register(receiver) = value;
+            Instruction::LDRN(receiver, value) => {
+                *self.get_register_pointer(receiver) = value;
             },
             Instruction::LDRHL(receiver) => {
                 let address = self.registers.get_hl();
                 let value = self.read_address(address);
-                *self.get_target_register(receiver) = value;
+                *self.get_register_pointer(receiver) = value;
+            },
+            Instruction::LDHLR(source) => {
+                let value = self.get_register_value(source);
+                let address = self.registers.get_hl();
+                self.write_address(address, value);
+            },
+            Instruction::LDHLN(value) => {
+                let address = self.registers.get_hl();
+                self.write_address(address, value);
+            },
+            Instruction::LDABC => {
+                let address = self.registers.get_bc();
+                let value = self.read_address(address);
+                self.registers.a = value;
+            },
+            Instruction::LDADE => {
+                let address = self.registers.get_de();
+                let value = self.read_address(address);
+                self.registers.a = value;
+            },
+            Instruction::LDBCA => {
+                let address = self.registers.get_bc();
+                let value = self.registers.a;
+                self.write_address(address, value);
+            },
+            Instruction::LDDEA => {
+                let address = self.registers.get_de();
+                let value = self.registers.a;
+                self.write_address(address, value);
+            },
+            Instruction::LDANN(address) => {
+                let value = self.read_address(address);
+                self.registers.a = value;
+            },
+            Instruction::LDNNA(address) => {
+                let value = self.registers.a;
+                self.write_address(address, value);
             }
         }
     }
 
+    fn write_address(&mut self, address: u16, value: u8){
+        //TODO
+    }
+
     fn read_address(&mut self, address: u16) -> u8 {
-        return 0x1; //TODO
+        return address as u8; //TODO
     }
 
-    fn pop_stack(&mut self) -> u8 {
-        let value = self.read_address(self.stack_pointer);
-
-        let (new_value, _) = self.stack_pointer.overflowing_add(0x1); //TODO
-        self.stack_pointer = new_value;
-
-        return value;
-    }
-
-    fn get_target_value(&mut self, target: ArithmeticTarget) -> u8 {
+    fn get_register_value(&mut self, target: ArithmeticTarget) -> u8 {
         match target {
             ArithmeticTarget::A => self.registers.a,
             ArithmeticTarget::B => self.registers.b,
@@ -59,7 +89,7 @@ impl CPU {
         }
     }
 
-    fn get_target_register(&mut self, target: ArithmeticTarget) -> &mut u8 {
+    fn get_register_pointer(&mut self, target: ArithmeticTarget) -> &mut u8 {
         match target {
             ArithmeticTarget::A => &mut self.registers.a,
             ArithmeticTarget::B => &mut self.registers.b,
@@ -71,7 +101,7 @@ impl CPU {
         }
     }
 
-    fn get_target_value_16(&mut self, target: ArithmeticTarget16) -> u16 {
+    fn get_register_value_16(&mut self, target: ArithmeticTarget16) -> u16 {
         match target {
             ArithmeticTarget16::BC => self.registers.get_bc(),
             ArithmeticTarget16::DE => self.registers.get_de(),
@@ -80,12 +110,12 @@ impl CPU {
     }
 
     fn adc(&mut self, target: ArithmeticTarget){
-        let value = self.get_target_value(target);
+        let value = self.get_register_value(target);
         self.add_constant_carry(value);
     }
 
     fn add(&mut self, target: ArithmeticTarget) {
-        let value = self.get_target_value(target);
+        let value = self.get_register_value(target);
         self.add_constant(value);
     }
 
@@ -113,7 +143,7 @@ impl CPU {
     }
 
     fn add_hl(&mut self, target: ArithmeticTarget16) {
-        let target_value = self.get_target_value_16(target);
+        let target_value = self.get_register_value_16(target);
         self.add_constant_16(target_value)
     }
 
@@ -158,48 +188,101 @@ mod test{
                 h: 0,
                 l: 0
             },
-            program_counter: 0,
-            stack_pointer: 0
+            program_counter: 0
         }
     }
 
     #[test]
-    fn test_ldrhl(){
+    fn test_ld_a_nn(){
+        let mut cpu = initialize_cpu();
+        let address = 0x12;
+
+        cpu.execute(Instruction::LDANN(address));
+
+        let expected_value = cpu.read_address(address);
+
+        assert_eq!(expected_value, cpu.registers.a);
+    }
+
+    #[test]
+    fn test_ld_nn_a(){
+        // TODO after implementing memory operations
+    }
+
+    #[test]
+    fn test_ld_bc_a(){
+        // TODO after implementing memory operations
+    }
+
+    #[test]
+    fn test_ld_de_a(){
+        // TODO after implementing memory operations
+    }
+
+    #[test]
+    fn test_ld_a_de(){
+        let mut cpu = initialize_cpu();
+
+        cpu.execute(Instruction::LDADE);
+
+        let address = cpu.registers.get_de();
+        let expected_value = cpu.read_address(address);
+
+        assert_eq!(expected_value, cpu.registers.a);
+    }
+
+    #[test]
+    fn test_ld_a_bc(){
+        let mut cpu = initialize_cpu();
+
+        cpu.execute(Instruction::LDABC);
+
+        let address = cpu.registers.get_bc();
+        let expected_value = cpu.read_address(address);
+
+        assert_eq!(expected_value, cpu.registers.a);
+    }
+
+    #[test]
+    fn test_ld_hl_n(){
+        // TODO after implementing memory operations
+    }
+
+    #[test]
+    fn test_ld_r_hl(){
         for receiver in ArithmeticTarget::iter() {
             let mut cpu = initialize_cpu();
 
             cpu.execute(Instruction::LDRHL(receiver));
 
             //TODO: add some better logic after stack pop has been implemented
-            assert_eq!(0x1, cpu.get_target_value(receiver));
+            assert_eq!(0x1, cpu.get_register_value(receiver));
         }
     }
 
     #[test]
-    fn test_ldn(){
+    fn test_ld_n(){
         for receiver in ArithmeticTarget::iter() {
             let mut cpu = initialize_cpu();
-            let old_stack_pointer = cpu.stack_pointer;
+            let value = rand_8(0xFF);
 
-            cpu.execute(Instruction::LDN(receiver));
+            cpu.execute(Instruction::LDRN(receiver, value));
 
-            //TODO: add some better logic after stack pop has been implemented
-            assert_eq!(0x1, cpu.get_target_value(receiver));
-            assert_eq!(old_stack_pointer + 1, cpu.stack_pointer);
+            assert_eq!(value, cpu.get_register_value(receiver));
         }
     }
 
     #[test]
-    fn test_ldr(){
+    fn test_ld_r(){
         for source in ArithmeticTarget::iter(){
             for receiver in ArithmeticTarget::iter() {
                 let mut cpu = initialize_cpu();
-                *cpu.get_target_register(source) = 0x1;
+                *cpu.get_register_pointer(source) = 0x1;
 
                 cpu.execute(Instruction::LDR(source, receiver));
 
-                let source_value = cpu.get_target_value(source);
-                let receiver_value = cpu.get_target_value(receiver);
+                let source_value = cpu.get_register_value(source);
+                let receiver_value = cpu.get_register_value(receiver);
 
                 assert_eq!(source_value, receiver_value);
             }
@@ -210,13 +293,13 @@ mod test{
     fn test_get_target_register(){
         let mut cpu = initialize_cpu();
         for target in ArithmeticTarget::iter(){
-            assert_eq!(0x0, *cpu.get_target_register(target));
+            assert_eq!(0x0, *cpu.get_register_pointer(target));
         }
         for target in ArithmeticTarget::iter(){
             let val: u8 = rand_8(0xFF);
-            *cpu.get_target_register(target) = val;
+            *cpu.get_register_pointer(target) = val;
 
-            assert_eq!(val as u8, cpu.get_target_value(target));
+            assert_eq!(val as u8, cpu.get_register_value(target));
         }
     }
 
