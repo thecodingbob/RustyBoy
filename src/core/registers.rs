@@ -28,6 +28,20 @@ pub (super) struct FlagRegister {
 
 
 impl Registers {
+
+    pub (super) fn new() -> Registers {
+        Registers {
+            a: 0,
+            b: 0,
+            c: 0,
+            d: 0,
+            e: 0,
+            f: FlagRegister::from(0b0),
+            h: 0,
+            l: 0
+        }
+    }
+
     pub (super) fn get_af(&self) -> u16 {
         join_u8(self.a, u8::from(&self.f))
     }

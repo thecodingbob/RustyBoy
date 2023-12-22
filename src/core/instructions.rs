@@ -42,6 +42,28 @@ pub (super) enum Instruction {
     LDAHLINC,
     // Loads to the absolute address HL, data from A, then decrements HL
     LDHLINCA,
+    // Jumps if the JumpCondition is satisfied
+    JP(JumpCondition)
+}
+
+impl Instruction {
+    pub (super) fn from_byte(byte: u8, is_prefixed: bool) -> Option<Instruction>{
+        match byte {
+            _ => None
+        }
+    }
+
+    pub (super) fn from_byte_prefixed(byte: u8) -> Option<Instruction>{
+        match byte {
+            _ => None
+        }
+    }
+
+    pub (super) fn from_byte_not_prefixed(byte: u8) -> Option<Instruction>{
+        match byte {
+            _ => None
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, EnumIter)]
@@ -52,4 +74,13 @@ pub (super) enum ArithmeticTarget {
 #[derive(Debug, Clone, Copy, EnumIter)]
 pub(super) enum ArithmeticTarget16 {
     BC, DE, HL
+}
+
+#[derive(Debug)]
+pub (super) enum JumpCondition {
+    NotZero,
+    Zero,
+    NotCarry,
+    Carry,
+    Always
 }

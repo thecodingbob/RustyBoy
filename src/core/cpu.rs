@@ -1,129 +1,181 @@
-use crate::core::instructions::{ArithmeticTarget, ArithmeticTarget16, Instruction};
+use std::fmt::format;
+use crate::core::instructions::{ArithmeticTarget, ArithmeticTarget16, Instruction, JumpCondition};
+use crate::core::memory::MemoryBus;
 use crate::core::registers::Registers;
 use crate::util::join_u8;
 
 #[derive(Debug)]
 struct CPU {
     registers: Registers,
-    program_counter: u16
+    program_counter: u16,
+    bus: MemoryBus
 }
 impl CPU {
-    fn execute(&mut self, instruction: Instruction) {
+    fn new() -> Self {
+        CPU{
+            registers: Registers::new(),
+            program_counter: 0,
+            bus: MemoryBus::new()
+        }
+    }
+
+    fn step(&mut self){
+        let mut instruction_byte = self.bus.read_byte(self.program_counter);
+        let is_prefixed = instruction_byte == 0xCB;
+        if is_prefixed {
+            instruction_byte = self.bus.read_byte(self.program_counter.wrapping_add(1));
+        }
+
+        if let Some(instruction) = Instruction::from_byte(instruction_byte, is_prefixed){
+            let next_program_counter = self.execute(instruction);
+            self.program_counter = next_program_counter;
+        } else {
+            let description = format!("0x{}{:x}", if is_prefixed { "cb" } else { "" }, instruction_byte);
+            panic!("Unknown instruction for: 0x{}", description)
+        };
+    }
+
+    fn execute(&mut self, instruction: Instruction) -> u16 {
         match instruction {
             Instruction::ADD(target) => {
                 self.add(target);
+                self.program_counter.wrapping_add(1)
             },
             Instruction::ADDHL(target) => {
-                self.add_hl(target)
+                self.add_hl(target);
+                self.program_counter.wrapping_add(1)
             },
             Instruction::ADC(target) => {
-                self.adc(target)
+                self.adc(target);
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDR(source, receiver) => {
-                *self.get_register_pointer(receiver) = self.get_register_value(source)
+                *self.get_register_pointer(receiver) = self.get_register_value(source);
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDRN(receiver, value) => {
                 *self.get_register_pointer(receiver) = value;
+                self.program_counter.wrapping_add(2)
             },
             Instruction::LDRHL(receiver) => {
                 let address = self.registers.get_hl();
-                let value = self.read_from_address(address);
+                let value = self.bus.read_byte(address);
                 *self.get_register_pointer(receiver) = value;
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDHLR(source) => {
                 let value = self.get_register_value(source);
                 let address = self.registers.get_hl();
-                self.write_to_address(address, value);
+                self.bus.write_byte(address, value);
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDHLN(value) => {
                 let address = self.registers.get_hl();
-                self.write_to_address(address, value);
+                self.bus.write_byte(address, value);
+                self.program_counter.wrapping_add(2)
+                //TODO: start from here managing the program counter values
             },
             Instruction::LDABC => {
                 let address = self.registers.get_bc();
-                let value = self.read_from_address(address);
+                let value = self.bus.read_byte(address);
                 self.registers.a = value;
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDADE => {
                 let address = self.registers.get_de();
-                let value = self.read_from_address(address);
+                let value = self.bus.read_byte(address);
                 self.registers.a = value;
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDBCA => {
                 let address = self.registers.get_bc();
                 let value = self.registers.a;
-                self.write_to_address(address, value);
+                self.bus.write_byte(address, value);
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDDEA => {
                 let address = self.registers.get_de();
                 let value = self.registers.a;
-                self.write_to_address(address, value);
+                self.bus.write_byte(address, value);
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDANN(address) => {
-                let value = self.read_from_address(address);
+                let value = self.bus.read_byte(address);
                 self.registers.a = value;
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDNNA(address) => {
                 let value = self.registers.a;
-                self.write_to_address(address, value);
+                self.bus.write_byte(address, value);
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDHAC => {
                 let address = join_u8(0xFF, self.registers.c);
-                let value = self.read_from_address(address);
+                let value = self.bus.read_byte(address);
                 self.registers.a = value;
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDHCA => {
                 let address = join_u8(0xFF, self.registers.c);
                 let value = self.registers.a;
-                self.write_to_address(address, value);
+                self.bus.write_byte(address, value);
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDHAN(address_least_signficant_byte) => {
                 let address = join_u8(0xFF, address_least_signficant_byte);
-                let value = self.read_from_address(address);
+                let value = self.bus.read_byte(address);
                 self.registers.a = value;
+                self.program_counter.wrapping_add(1)
             }
             Instruction::LDHNA(address_least_significant_byte) => {
                 let address = join_u8(0xFF, address_least_significant_byte);
                 let value = self.registers.a;
-                self.write_to_address(address, value);
+                self.bus.write_byte(address, value);
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDAHLDEC => {
                 let address = self.registers.get_hl();
-                let value = self.read_from_address(address);
+                let value = self.bus.read_byte(address);
 
                 self.registers.a = value;
                 self.registers.set_hl(address.wrapping_sub(1));
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDHLDECA => {
                 let address = self.registers.get_hl();
                 let value = self.registers.a;
 
-                self.write_to_address(address, value);
+                self.bus.write_byte(address, value);
                 self.registers.set_hl(address.wrapping_sub(1));
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDAHLINC => {
                 let address = self.registers.get_hl();
-                let value = self.read_from_address(address);
+                let value = self.bus.read_byte(address);
 
                 self.registers.a = value;
                 self.registers.set_hl(address.wrapping_add(1));
+                self.program_counter.wrapping_add(1)
             },
             Instruction::LDHLINCA => {
                 let address = self.registers.get_hl();
                 let value = self.registers.a;
 
-                self.write_to_address(address, value);
+                self.bus.write_byte(address, value);
                 self.registers.set_hl(address.wrapping_add(1));
+                self.program_counter.wrapping_add(1)
+            },
+            Instruction::JP(jump_condition) => {
+                let should_jump = match jump_condition {
+                    JumpCondition::NotZero => !self.registers.f.zero,
+                    JumpCondition::Zero => self.registers.f.zero,
+                    JumpCondition::NotCarry => !self.registers.f.carry,
+                    JumpCondition::Carry => self.registers.f.carry,
+                    JumpCondition::Always => true
+                };
+                self.jump(jump_condition)
             }
         }
-    }
-
-    fn write_to_address(&mut self, address: u16, value: u8){
-        //TODO
-    }
-
-    fn read_from_address(&mut self, address: u16) -> u8 {
-        return address as u8; //TODO
     }
 
     fn get_register_value(&mut self, target: ArithmeticTarget) -> u8 {
@@ -222,34 +274,25 @@ mod test{
     use strum::IntoEnumIterator;
     use crate::core::cpu::CPU;
     use crate::core::instructions::{ArithmeticTarget, ArithmeticTarget16, Instruction};
-    use crate::core::registers::{FlagRegister, Registers};
-    use crate::util::{join_u8, rand_8};
+    use crate::core::registers::FlagRegister;
+    use crate::util::{join_u8, Randomizable};
 
-    fn initialize_cpu() -> CPU {
-        CPU{
-            registers: Registers{
-                a: 0,
-                b: 0,
-                c: 0,
-                d: 0,
-                e: 0,
-                f: FlagRegister::from(0b0),
-                h: 0,
-                l: 0
-            },
-            program_counter: 0
-        }
+    #[test]
+    fn test_step(){
+        let mut cpu = CPU::new();
+
+        cpu.step();
     }
 
     #[test]
     fn test_ld_hl_inc_a(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         let hl_address = u16::MAX;
         cpu.registers.set_hl(hl_address);
 
         cpu.execute(Instruction::LDAHLINC);
 
-        let expected_value = cpu.read_from_address(hl_address);
+        let expected_value = cpu.bus.read_byte(hl_address);
 
         // TODO after implementing memory operations
         assert_eq!(hl_address.wrapping_add(1), cpu.registers.get_hl())
@@ -257,13 +300,14 @@ mod test{
 
     #[test]
     fn test_ld_a_hl_inc(){
-        let mut cpu = initialize_cpu();
+        //TODO: fix address increment/decrement logic
+        let mut cpu = CPU::new();
         let hl_address = u16::MAX;
         cpu.registers.set_hl(hl_address);
 
         cpu.execute(Instruction::LDAHLINC);
 
-        let expected_value = cpu.read_from_address(hl_address);
+        let expected_value = cpu.bus.read_byte(hl_address);
 
         assert_eq!(expected_value, cpu.registers.a);
         assert_eq!(hl_address.wrapping_add(1), cpu.registers.get_hl())
@@ -271,13 +315,13 @@ mod test{
 
     #[test]
     fn test_ld_hl_dec_a(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         let hl_address = 0;
         cpu.registers.set_hl(hl_address);
 
         cpu.execute(Instruction::LDAHLDEC);
 
-        let expected_value = cpu.read_from_address(hl_address);
+        let expected_value = cpu.bus.read_byte(hl_address);
 
         // TODO after implementing memory operations
         assert_eq!(hl_address.wrapping_sub(1), cpu.registers.get_hl())
@@ -285,13 +329,13 @@ mod test{
 
     #[test]
     fn test_ld_a_hl_dec(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         let hl_address = 0;
         cpu.registers.set_hl(hl_address);
 
         cpu.execute(Instruction::LDAHLDEC);
 
-        let expected_value = cpu.read_from_address(hl_address);
+        let expected_value = cpu.bus.read_byte(hl_address);
 
         assert_eq!(expected_value, cpu.registers.a);
         assert_eq!(hl_address.wrapping_sub(1), cpu.registers.get_hl())
@@ -304,13 +348,13 @@ mod test{
 
     #[test]
     fn test_ld_h_a_n(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         let n_address = 0x12;
         let full_address = join_u8(0xFF, n_address);
 
         cpu.execute(Instruction::LDHAN(n_address));
 
-        let expected_value = cpu.read_from_address(full_address);
+        let expected_value = cpu.bus.read_byte(full_address);
 
         assert_eq!(expected_value, cpu.registers.a);
     }
@@ -322,26 +366,26 @@ mod test{
 
     #[test]
     fn test_ld_h_a_c(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         let c_address = 0x12;
         cpu.registers.c = c_address;
         let full_address = join_u8(0xFF, c_address);
 
         cpu.execute(Instruction::LDHAC);
 
-        let expected_value = cpu.read_from_address(full_address);
+        let expected_value = cpu.bus.read_byte(full_address);
 
         assert_eq!(expected_value, cpu.registers.a);
     }
 
     #[test]
     fn test_ld_a_nn(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         let address = 0x12;
 
         cpu.execute(Instruction::LDANN(address));
 
-        let expected_value = cpu.read_from_address(address);
+        let expected_value = cpu.bus.read_byte(address);
 
         assert_eq!(expected_value, cpu.registers.a);
     }
@@ -363,24 +407,24 @@ mod test{
 
     #[test]
     fn test_ld_a_de(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
 
         cpu.execute(Instruction::LDADE);
 
         let address = cpu.registers.get_de();
-        let expected_value = cpu.read_from_address(address);
+        let expected_value = cpu.bus.read_byte(address);
 
         assert_eq!(expected_value, cpu.registers.a);
     }
 
     #[test]
     fn test_ld_a_bc(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
 
         cpu.execute(Instruction::LDABC);
 
         let address = cpu.registers.get_bc();
-        let expected_value = cpu.read_from_address(address);
+        let expected_value = cpu.bus.read_byte(address);
 
         assert_eq!(expected_value, cpu.registers.a);
     }
@@ -393,7 +437,7 @@ mod test{
     #[test]
     fn test_ld_r_hl(){
         for receiver in ArithmeticTarget::iter() {
-            let mut cpu = initialize_cpu();
+            let mut cpu = CPU::new();
 
             cpu.execute(Instruction::LDRHL(receiver));
 
@@ -405,8 +449,8 @@ mod test{
     #[test]
     fn test_ld_n(){
         for receiver in ArithmeticTarget::iter() {
-            let mut cpu = initialize_cpu();
-            let value = rand_8(0xFF);
+            let mut cpu = CPU::new();
+            let value = u8::next_random(0xFF);
 
             cpu.execute(Instruction::LDRN(receiver, value));
 
@@ -418,7 +462,7 @@ mod test{
     fn test_ld_r(){
         for source in ArithmeticTarget::iter(){
             for receiver in ArithmeticTarget::iter() {
-                let mut cpu = initialize_cpu();
+                let mut cpu = CPU::new();
                 *cpu.get_register_pointer(source) = 0x1;
 
                 cpu.execute(Instruction::LDR(source, receiver));
@@ -433,12 +477,12 @@ mod test{
 
     #[test]
     fn test_get_target_register(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         for target in ArithmeticTarget::iter(){
             assert_eq!(0x0, *cpu.get_register_pointer(target));
         }
         for target in ArithmeticTarget::iter(){
-            let val: u8 = rand_8(0xFF);
+            let val: u8 = u8::next_random(0xFF);
             *cpu.get_register_pointer(target) = val;
 
             assert_eq!(val as u8, cpu.get_register_value(target));
@@ -447,7 +491,7 @@ mod test{
 
     #[test]
     fn test_add_constant(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         cpu.add_constant(1);
 
         assert_eq!(1, cpu.registers.a);
@@ -456,7 +500,7 @@ mod test{
 
     #[test]
     fn test_add_zero_flag(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
 
         cpu.add_constant(0);
 
@@ -471,7 +515,7 @@ mod test{
 
     #[test]
     fn test_add_half_carry_flag(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         cpu.registers.a = 0xF;
 
         cpu.add_constant(0xF);
@@ -487,7 +531,7 @@ mod test{
 
     #[test]
     fn test_add_carry_flag(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         cpu.registers.a = 0xFF;
 
         cpu.add_constant(1);
@@ -503,7 +547,7 @@ mod test{
 
     #[test]
     fn test_add(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         cpu.registers.c = 0x10;
         cpu.registers.h = 0x3;
 
@@ -522,7 +566,7 @@ mod test{
 
     #[test]
     fn test_add_constant_carry(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         cpu.registers.f.carry = true;
 
         cpu.add_constant_carry(0x0);
@@ -533,7 +577,7 @@ mod test{
 
     #[test]
     fn test_add_constant_carry_zero(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         cpu.registers.f.carry = true;
         cpu.registers.a = 0xFF;
 
@@ -550,7 +594,7 @@ mod test{
 
     #[test]
     fn test_adc(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         cpu.registers.e = 0x13;
 
         cpu.adc(ArithmeticTarget::E);
@@ -561,7 +605,7 @@ mod test{
 
     #[test]
     fn test_add_constant_16(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
 
         cpu.add_constant_16(0xABCD);
         assert_eq!(0xAB, cpu.registers.h);
@@ -571,7 +615,7 @@ mod test{
 
     #[test]
     fn test_add_constant_16_carry(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         cpu.registers.set_hl(0xFFFF);
 
         cpu.add_constant_16(1);
@@ -587,7 +631,7 @@ mod test{
 
     #[test]
     fn test_add_hl(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         cpu.registers.set_bc(0x1234);
 
         cpu.add_hl(ArithmeticTarget16::BC);
@@ -605,7 +649,7 @@ mod test{
 
     #[test]
     fn test_sub_constant(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
 
         cpu.sub_constant(0x1);
 
@@ -620,7 +664,7 @@ mod test{
 
     #[test]
     fn test_execute(){
-        let mut cpu = initialize_cpu();
+        let mut cpu = CPU::new();
         cpu.registers.a = 0x1;
 
         cpu.execute(Instruction::ADD(ArithmeticTarget::A));

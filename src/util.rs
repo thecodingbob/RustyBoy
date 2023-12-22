@@ -1,8 +1,24 @@
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 // pseudo-random number
-pub fn rand_8(max: u32) -> u8{
-    (SystemTime::now().duration_since(UNIX_EPOCH).unwrap().subsec_nanos() % max) as u8
+pub trait Randomizable {
+    fn next_random(max: Self) -> Self;
+}
+
+impl Randomizable for u8 {
+    fn next_random(max: u8) -> u8 {
+        (rand_from_system_time() % (max as u32)) as u8
+    }
+}
+
+impl Randomizable for u16 {
+    fn next_random(max: u16) -> u16 {
+        (rand_from_system_time() % (max as u32)) as u16
+    }
+}
+
+fn rand_from_system_time() -> u32 {
+    SystemTime::now().duration_since(UNIX_EPOCH).unwrap().subsec_nanos()
 }
 
 pub fn join_u8(most_significant: u8, least_significant: u8) -> u16 {
