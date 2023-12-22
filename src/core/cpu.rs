@@ -3,7 +3,9 @@ use crate::core::registers::Registers;
 
 #[derive(Debug)]
 struct CPU {
-    registers: Registers
+    registers: Registers,
+    program_counter: u16,
+    stack_pointer: u16
 }
 impl CPU {
     fn execute(&mut self, instruction: Instruction) {
@@ -16,8 +18,33 @@ impl CPU {
             },
             Instruction::ADC(target) => {
                 self.adc(target)
+            },
+            Instruction::LDR(source, receiver) => {
+                *self.get_target_register(receiver) = self.get_target_value(source)
+            },
+            Instruction::LDN(receiver) => {
+                let value = self.pop_stack();
+                *self.get_target_register(receiver) = value;
+            },
+            Instruction::LDRHL(receiver) => {
+                let address = self.registers.get_hl();
+                let value = self.read_address(address);
+                *self.get_target_register(receiver) = value;
             }
         }
+    }
+
+    fn read_address(&mut self, address: u16) -> u8 {
+        return 0x1; //TODO
+    }
+
+    fn pop_stack(&mut self) -> u8 {
+        let value = self.read_address(self.stack_pointer);
+
+        let (new_value, _) = self.stack_pointer.overflowing_add(0x1); //TODO
+        self.stack_pointer = new_value;
+
+        return value;
     }
 
     fn get_target_value(&mut self, target: ArithmeticTarget) -> u8 {
@@ -29,6 +56,18 @@ impl CPU {
             ArithmeticTarget::E => self.registers.e,
             ArithmeticTarget::H => self.registers.h,
             ArithmeticTarget::L => self.registers.l
+        }
+    }
+
+    fn get_target_register(&mut self, target: ArithmeticTarget) -> &mut u8 {
+        match target {
+            ArithmeticTarget::A => &mut self.registers.a,
+            ArithmeticTarget::B => &mut self.registers.b,
+            ArithmeticTarget::C => &mut self.registers.c,
+            ArithmeticTarget::D => &mut self.registers.d,
+            ArithmeticTarget::E => &mut self.registers.e,
+            ArithmeticTarget::H => &mut self.registers.h,
+            ArithmeticTarget::L => &mut self.registers.l
         }
     }
 
@@ -60,18 +99,16 @@ impl CPU {
     }
 
     fn add_constant_carry(&mut self, value:u8) {
-        let carry_value: u8 = if self.registers.f.carry { 1 } else { 0 };
-
         let (mut new_value, mut did_overflow) = self.registers.a.overflowing_add(value);
 
         let carry_did_overflow;
-        (new_value, carry_did_overflow) = new_value.overflowing_add(carry_value);
+        (new_value, carry_did_overflow) = new_value.overflowing_add(self.registers.f.carry as u8);
         did_overflow = did_overflow || carry_did_overflow;
 
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = false;
         self.registers.f.carry = did_overflow;
-        self.registers.f.half_carry = ((self.registers.a & 0xF) + ((value + carry_value) & 0xF)) > 0xF;
+        self.registers.f.half_carry = ((self.registers.a & 0xF) + (value & 0xF) + ((self.registers.f.carry as u8) & 0xF)) > 0xF;
         self.registers.a = new_value;
     }
 
@@ -89,13 +126,25 @@ impl CPU {
         self.registers.f.half_carry = ((hl_value & 0xFF) + (value & 0xFF)) > 0xFF;
         self.registers.set_hl(new_value);
     }
+
+    fn sub_constant(&mut self, value: u8) {
+        let (new_value, did_overflow) = self.registers.a.overflowing_sub(value);
+        self.registers.f.zero = new_value == 0;
+        self.registers.f.subtract = true;
+        self.registers.f.carry = did_overflow;
+        let (half_sub, _) = (self.registers.a & 0xF).overflowing_sub(value & 0xF);
+        self.registers.f.half_carry = half_sub > 0xF;
+        self.registers.a = new_value;
+    }
 }
 
 #[cfg(test)]
 mod test{
+    use strum::IntoEnumIterator;
     use crate::core::cpu::CPU;
     use crate::core::instructions::{ArithmeticTarget, ArithmeticTarget16, Instruction};
     use crate::core::registers::{FlagRegister, Registers};
+    use crate::util::rand_8;
 
     fn initialize_cpu() -> CPU {
         CPU{
@@ -108,7 +157,66 @@ mod test{
                 f: FlagRegister::from(0b0),
                 h: 0,
                 l: 0
+            },
+            program_counter: 0,
+            stack_pointer: 0
+        }
+    }
+
+    #[test]
+    fn test_ldrhl(){
+        for receiver in ArithmeticTarget::iter() {
+            let mut cpu = initialize_cpu();
+
+            cpu.execute(Instruction::LDRHL(receiver));
+
+            //TODO: add some better logic after stack pop has been implemented
+            assert_eq!(0x1, cpu.get_target_value(receiver));
+        }
+    }
+
+    #[test]
+    fn test_ldn(){
+        for receiver in ArithmeticTarget::iter() {
+            let mut cpu = initialize_cpu();
+            let old_stack_pointer = cpu.stack_pointer;
+
+            cpu.execute(Instruction::LDN(receiver));
+
+            //TODO: add some better logic after stack pop has been implemented
+            assert_eq!(0x1, cpu.get_target_value(receiver));
+            assert_eq!(old_stack_pointer + 1, cpu.stack_pointer);
+        }
+    }
+
+    #[test]
+    fn test_ldr(){
+        for source in ArithmeticTarget::iter(){
+            for receiver in ArithmeticTarget::iter() {
+                let mut cpu = initialize_cpu();
+                *cpu.get_target_register(source) = 0x1;
+
+                cpu.execute(Instruction::LDR(source, receiver));
+
+                let source_value = cpu.get_target_value(source);
+                let receiver_value = cpu.get_target_value(receiver);
+
+                assert_eq!(source_value, receiver_value);
             }
+        }
+    }
+
+    #[test]
+    fn test_get_target_register(){
+        let mut cpu = initialize_cpu();
+        for target in ArithmeticTarget::iter(){
+            assert_eq!(0x0, *cpu.get_target_register(target));
+        }
+        for target in ArithmeticTarget::iter(){
+            let val: u8 = rand_8(0xFF);
+            *cpu.get_target_register(target) = val;
+
+            assert_eq!(val as u8, cpu.get_target_value(target));
         }
     }
 
@@ -271,6 +379,21 @@ mod test{
     }
 
     #[test]
+    fn test_sub_constant(){
+        let mut cpu = initialize_cpu();
+
+        cpu.sub_constant(0x1);
+
+        assert_eq!(0xFF, cpu.registers.a);
+        assert_eq!(FlagRegister{
+            zero: false,
+            subtract: true,
+            half_carry: true,
+            carry: true
+        }, cpu.registers.f);
+    }
+
+    #[test]
     fn test_execute(){
         let mut cpu = initialize_cpu();
         cpu.registers.a = 0x1;
@@ -279,4 +402,5 @@ mod test{
 
         assert_eq!(0x2, cpu.registers.a);
     }
+
 }

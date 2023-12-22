@@ -15,14 +15,15 @@ pub (super) struct Registers {
     pub (super) l: u8,
 }
 
-#[derive(PartialEq)]
-#[derive(Debug)]
+#[derive(PartialEq, Debug)]
 pub (super) struct FlagRegister {
     pub (super) zero: bool,
     pub (super) subtract: bool,
     pub (super) half_carry: bool,
     pub (super) carry: bool
 }
+
+
 
 impl Registers {
     pub (super) fn get_af(&self) -> u16 {
