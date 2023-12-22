@@ -25,7 +25,23 @@ pub (super) enum Instruction {
     // Loads to the register A, data from the absolute address NN
     LDANN(u16),
     // Loads to the absolute address NN, data from A
-    LDNNA(u16)
+    LDNNA(u16),
+    // Loads to A, data from the absolute address 0xFF00 + C
+    LDHAC,
+    // Loads to the absolute address 0xFF00 + C, data from A
+    LDHCA,
+    // Loads to A, data from the absolute address 0xFF00 + N
+    LDHAN(u8),
+    // Loads to the absolute address 0xFF00 + N, data from A
+    LDHNA(u8),
+    // Loads to A, data from the absolute address HL, then decrements HL by 1
+    LDAHLDEC,
+    // Loads to the absolute address HL, data from A, then decrements HL
+    LDHLDECA,
+    // Loads to A, data from the absolute address HL, then increments HL by 1
+    LDAHLINC,
+    // Loads to the absolute address HL, data from A, then decrements HL
+    LDHLINCA,
 }
 
 #[derive(Debug, Clone, Copy, EnumIter)]

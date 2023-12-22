@@ -1,5 +1,6 @@
 use crate::core::instructions::{ArithmeticTarget, ArithmeticTarget16, Instruction};
 use crate::core::registers::Registers;
+use crate::util::join_u8;
 
 #[derive(Debug)]
 struct CPU {
@@ -26,54 +27,102 @@ impl CPU {
             },
             Instruction::LDRHL(receiver) => {
                 let address = self.registers.get_hl();
-                let value = self.read_address(address);
+                let value = self.read_from_address(address);
                 *self.get_register_pointer(receiver) = value;
             },
             Instruction::LDHLR(source) => {
                 let value = self.get_register_value(source);
                 let address = self.registers.get_hl();
-                self.write_address(address, value);
+                self.write_to_address(address, value);
             },
             Instruction::LDHLN(value) => {
                 let address = self.registers.get_hl();
-                self.write_address(address, value);
+                self.write_to_address(address, value);
             },
             Instruction::LDABC => {
                 let address = self.registers.get_bc();
-                let value = self.read_address(address);
+                let value = self.read_from_address(address);
                 self.registers.a = value;
             },
             Instruction::LDADE => {
                 let address = self.registers.get_de();
-                let value = self.read_address(address);
+                let value = self.read_from_address(address);
                 self.registers.a = value;
             },
             Instruction::LDBCA => {
                 let address = self.registers.get_bc();
                 let value = self.registers.a;
-                self.write_address(address, value);
+                self.write_to_address(address, value);
             },
             Instruction::LDDEA => {
                 let address = self.registers.get_de();
                 let value = self.registers.a;
-                self.write_address(address, value);
+                self.write_to_address(address, value);
             },
             Instruction::LDANN(address) => {
-                let value = self.read_address(address);
+                let value = self.read_from_address(address);
                 self.registers.a = value;
             },
             Instruction::LDNNA(address) => {
                 let value = self.registers.a;
-                self.write_address(address, value);
+                self.write_to_address(address, value);
+            },
+            Instruction::LDHAC => {
+                let address = join_u8(0xFF, self.registers.c);
+                let value = self.read_from_address(address);
+                self.registers.a = value;
+            },
+            Instruction::LDHCA => {
+                let address = join_u8(0xFF, self.registers.c);
+                let value = self.registers.a;
+                self.write_to_address(address, value);
+            },
+            Instruction::LDHAN(address_least_signficant_byte) => {
+                let address = join_u8(0xFF, address_least_signficant_byte);
+                let value = self.read_from_address(address);
+                self.registers.a = value;
+            }
+            Instruction::LDHNA(address_least_significant_byte) => {
+                let address = join_u8(0xFF, address_least_significant_byte);
+                let value = self.registers.a;
+                self.write_to_address(address, value);
+            },
+            Instruction::LDAHLDEC => {
+                let address = self.registers.get_hl();
+                let value = self.read_from_address(address);
+
+                self.registers.a = value;
+                self.registers.set_hl(address.wrapping_sub(1));
+            },
+            Instruction::LDHLDECA => {
+                let address = self.registers.get_hl();
+                let value = self.registers.a;
+
+                self.write_to_address(address, value);
+                self.registers.set_hl(address.wrapping_sub(1));
+            },
+            Instruction::LDAHLINC => {
+                let address = self.registers.get_hl();
+                let value = self.read_from_address(address);
+
+                self.registers.a = value;
+                self.registers.set_hl(address.wrapping_add(1));
+            },
+            Instruction::LDHLINCA => {
+                let address = self.registers.get_hl();
+                let value = self.registers.a;
+
+                self.write_to_address(address, value);
+                self.registers.set_hl(address.wrapping_add(1));
             }
         }
     }
 
-    fn write_address(&mut self, address: u16, value: u8){
+    fn write_to_address(&mut self, address: u16, value: u8){
         //TODO
     }
 
-    fn read_address(&mut self, address: u16) -> u8 {
+    fn read_from_address(&mut self, address: u16) -> u8 {
         return address as u8; //TODO
     }
 
@@ -174,7 +223,7 @@ mod test{
     use crate::core::cpu::CPU;
     use crate::core::instructions::{ArithmeticTarget, ArithmeticTarget16, Instruction};
     use crate::core::registers::{FlagRegister, Registers};
-    use crate::util::rand_8;
+    use crate::util::{join_u8, rand_8};
 
     fn initialize_cpu() -> CPU {
         CPU{
@@ -193,13 +242,106 @@ mod test{
     }
 
     #[test]
+    fn test_ld_hl_inc_a(){
+        let mut cpu = initialize_cpu();
+        let hl_address = u16::MAX;
+        cpu.registers.set_hl(hl_address);
+
+        cpu.execute(Instruction::LDAHLINC);
+
+        let expected_value = cpu.read_from_address(hl_address);
+
+        // TODO after implementing memory operations
+        assert_eq!(hl_address.wrapping_add(1), cpu.registers.get_hl())
+    }
+
+    #[test]
+    fn test_ld_a_hl_inc(){
+        let mut cpu = initialize_cpu();
+        let hl_address = u16::MAX;
+        cpu.registers.set_hl(hl_address);
+
+        cpu.execute(Instruction::LDAHLINC);
+
+        let expected_value = cpu.read_from_address(hl_address);
+
+        assert_eq!(expected_value, cpu.registers.a);
+        assert_eq!(hl_address.wrapping_add(1), cpu.registers.get_hl())
+    }
+
+    #[test]
+    fn test_ld_hl_dec_a(){
+        let mut cpu = initialize_cpu();
+        let hl_address = 0;
+        cpu.registers.set_hl(hl_address);
+
+        cpu.execute(Instruction::LDAHLDEC);
+
+        let expected_value = cpu.read_from_address(hl_address);
+
+        // TODO after implementing memory operations
+        assert_eq!(hl_address.wrapping_sub(1), cpu.registers.get_hl())
+    }
+
+    #[test]
+    fn test_ld_a_hl_dec(){
+        let mut cpu = initialize_cpu();
+        let hl_address = 0;
+        cpu.registers.set_hl(hl_address);
+
+        cpu.execute(Instruction::LDAHLDEC);
+
+        let expected_value = cpu.read_from_address(hl_address);
+
+        assert_eq!(expected_value, cpu.registers.a);
+        assert_eq!(hl_address.wrapping_sub(1), cpu.registers.get_hl())
+    }
+
+    #[test]
+    fn test_ld_h_n_a(){
+        // TODO after implementing memory operations
+    }
+
+    #[test]
+    fn test_ld_h_a_n(){
+        let mut cpu = initialize_cpu();
+        let n_address = 0x12;
+        let full_address = join_u8(0xFF, n_address);
+
+        cpu.execute(Instruction::LDHAN(n_address));
+
+        let expected_value = cpu.read_from_address(full_address);
+
+        assert_eq!(expected_value, cpu.registers.a);
+    }
+
+    #[test]
+    fn test_ld_h_c_a(){
+        // TODO after implementing memory operations
+    }
+
+    #[test]
+    fn test_ld_h_a_c(){
+        let mut cpu = initialize_cpu();
+        let c_address = 0x12;
+        cpu.registers.c = c_address;
+        let full_address = join_u8(0xFF, c_address);
+
+        cpu.execute(Instruction::LDHAC);
+
+        let expected_value = cpu.read_from_address(full_address);
+
+        assert_eq!(expected_value, cpu.registers.a);
+    }
+
+    #[test]
     fn test_ld_a_nn(){
         let mut cpu = initialize_cpu();
         let address = 0x12;
 
         cpu.execute(Instruction::LDANN(address));
 
-        let expected_value = cpu.read_address(address);
+        let expected_value = cpu.read_from_address(address);
 
         assert_eq!(expected_value, cpu.registers.a);
     }
@@ -226,7 +368,7 @@ mod test{
         cpu.execute(Instruction::LDADE);
 
         let address = cpu.registers.get_de();
-        let expected_value = cpu.read_address(address);
+        let expected_value = cpu.read_from_address(address);
 
         assert_eq!(expected_value, cpu.registers.a);
     }
@@ -238,7 +380,7 @@ mod test{
         cpu.execute(Instruction::LDABC);
 
         let address = cpu.registers.get_bc();
-        let expected_value = cpu.read_address(address);
+        let expected_value = cpu.read_from_address(address);
 
         assert_eq!(expected_value, cpu.registers.a);
     }

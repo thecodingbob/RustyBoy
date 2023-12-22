@@ -1,3 +1,5 @@
+use crate::util::{join_u8, split_u16};
+
 const ZERO_FLAG_BYTE_POSITION: u8 = 7;
 const SUBTRACT_FLAG_BYTE_POSITION: u8 = 6;
 const HALF_CARRY_FLAG_BYTE_POSITION: u8 = 5;
@@ -83,35 +85,5 @@ impl From<u8> for FlagRegister {
             half_carry,
             carry
         }
-    }
-}
-
-fn join_u8(value1: u8, value2: u8) -> u16 {
-    (value1 as u16) << 8 | value2 as u16
-}
-
-fn split_u16(value: u16) -> (u8, u8){
-    (
-        ((value & 0xFF00) >> 8) as u8,
-        (value & 0xFF) as u8
-    )
-}
-
-#[cfg(test)]
-mod test{
-    use crate::core::registers::{join_u8, split_u16};
-
-    #[test]
-    fn test_split_u16(){
-        let (a, b) = split_u16(0xABCD);
-
-        assert_eq!(0xAB, a);
-        assert_eq!(0xCD, b);
-    }
-
-    #[test]
-    fn test_join_u16(){
-        assert_eq!(0xABCD, join_u8(0xAB, 0xCD));
-        assert_eq!(0xCD, join_u8(0x0, 0xCD));
     }
 }
