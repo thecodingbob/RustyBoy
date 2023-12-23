@@ -1,17 +1,16 @@
-use std::fmt::format;
 use crate::core::instructions::{ArithmeticTarget, ArithmeticTarget16, Instruction, JumpCondition};
 use crate::core::memory::MemoryBus;
 use crate::core::registers::Registers;
 use crate::util::join_u8;
 
 #[derive(Debug)]
-struct CPU {
-    registers: Registers,
-    program_counter: u16,
-    bus: MemoryBus
+pub(super) struct CPU {
+    pub (super) registers: Registers,
+    pub (super) program_counter: u16,
+    pub (super) bus: MemoryBus
 }
 impl CPU {
-    fn new() -> Self {
+    pub (super) fn new() -> Self {
         CPU{
             registers: Registers::new(),
             program_counter: 0,
@@ -156,112 +155,26 @@ impl CPU {
                     JumpCondition::Carry => self.registers.f.carry,
                     JumpCondition::Always => true
                 };
-                self.jump(jump_condition)
+                // TODO self.jump(jump_condition)
             }
         }
     }
 
-    fn read_and_increment_pc(&mut self) -> u8 {
-        let address = self.program_counter;
-        self.program_counter = address.wrapping_add(1);
-        self.bus.read_byte(address)
-    }
-
-    fn read_address_and_increment_pc(&mut self) -> u16 {
-        let lsb_address = self.read_and_increment_pc();
-        let msb_address = self.read_and_increment_pc();
-        join_u8(msb_address, lsb_address)
-    }
-
-    fn get_register_value(&mut self, target: ArithmeticTarget) -> u8 {
-        match target {
-            ArithmeticTarget::A => self.registers.a,
-            ArithmeticTarget::B => self.registers.b,
-            ArithmeticTarget::C => self.registers.c,
-            ArithmeticTarget::D => self.registers.d,
-            ArithmeticTarget::E => self.registers.e,
-            ArithmeticTarget::H => self.registers.h,
-            ArithmeticTarget::L => self.registers.l
-        }
-    }
-
-    fn get_register_pointer(&mut self, target: ArithmeticTarget) -> &mut u8 {
-        match target {
-            ArithmeticTarget::A => &mut self.registers.a,
-            ArithmeticTarget::B => &mut self.registers.b,
-            ArithmeticTarget::C => &mut self.registers.c,
-            ArithmeticTarget::D => &mut self.registers.d,
-            ArithmeticTarget::E => &mut self.registers.e,
-            ArithmeticTarget::H => &mut self.registers.h,
-            ArithmeticTarget::L => &mut self.registers.l
-        }
-    }
-
-    fn get_register_value_16(&mut self, target: ArithmeticTarget16) -> u16 {
-        match target {
-            ArithmeticTarget16::BC => self.registers.get_bc(),
-            ArithmeticTarget16::DE => self.registers.get_de(),
-            ArithmeticTarget16::HL => self.registers.get_hl()
-        }
-    }
-
+    // FUNCTIONS DIRECTLY MATCHING INSTRUCTIONS /////////////////////
     fn adc(&mut self, target: ArithmeticTarget){
         let value = self.get_register_value(target);
         self.add_constant_carry(value);
     }
-
     fn add(&mut self, target: ArithmeticTarget) {
         let value = self.get_register_value(target);
         self.add_constant(value);
     }
-
-    fn add_constant(&mut self, value:u8) {
-        let (new_value, did_overflow) = self.registers.a.overflowing_add(value);
-        self.registers.f.zero = new_value == 0;
-        self.registers.f.subtract = false;
-        self.registers.f.carry = did_overflow;
-        self.registers.f.half_carry = ((self.registers.a & 0xF) + (value & 0xF)) > 0xF;
-        self.registers.a = new_value;
-    }
-
-    fn add_constant_carry(&mut self, value:u8) {
-        let (mut new_value, mut did_overflow) = self.registers.a.overflowing_add(value);
-
-        let carry_did_overflow;
-        (new_value, carry_did_overflow) = new_value.overflowing_add(self.registers.f.carry as u8);
-        did_overflow = did_overflow || carry_did_overflow;
-
-        self.registers.f.zero = new_value == 0;
-        self.registers.f.subtract = false;
-        self.registers.f.carry = did_overflow;
-        self.registers.f.half_carry = ((self.registers.a & 0xF) + (value & 0xF) + ((self.registers.f.carry as u8) & 0xF)) > 0xF;
-        self.registers.a = new_value;
-    }
-
     fn add_hl(&mut self, target: ArithmeticTarget16) {
         let target_value = self.get_register_value_16(target);
         self.add_constant_16(target_value)
     }
+    ///////////////////////////////////////////////////
 
-    fn add_constant_16(&mut self, value: u16) {
-        let hl_value = self.registers.get_hl();
-        let (new_value, did_overflow) = hl_value.overflowing_add(value);
-        self.registers.f.zero = new_value == 0;
-        self.registers.f.subtract = false;
-        self.registers.f.carry = did_overflow;
-        self.registers.f.half_carry = ((hl_value & 0xFF) + (value & 0xFF)) > 0xFF;
-        self.registers.set_hl(new_value);
-    }
-
-    fn sub_constant(&mut self, value: u8) {
-        let (new_value, did_overflow) = self.registers.a.overflowing_sub(value);
-        self.registers.f.zero = new_value == 0;
-        self.registers.f.subtract = true;
-        self.registers.f.carry = did_overflow;
-        let (half_sub, _) = (self.registers.a & 0xF).overflowing_sub(value & 0xF);
-        self.registers.f.half_carry = half_sub > 0xF;
-        self.registers.a = new_value;
-    }
 }
 
 #[cfg(test)]
@@ -347,7 +260,7 @@ mod test{
         let n_address = 0x12;
         let full_address = join_u8(0xFF, n_address);
 
-        cpu.execute(Instruction::LDHAN(n_address));
+        cpu.execute(Instruction::LDHAN);
 
         let expected_value = cpu.bus.read_byte(full_address);
 
@@ -378,7 +291,7 @@ mod test{
         let mut cpu = CPU::new();
         let address = 0x12;
 
-        cpu.execute(Instruction::LDANN(address));
+        cpu.execute(Instruction::LDANN);
 
         let expected_value = cpu.bus.read_byte(address);
 
@@ -447,7 +360,7 @@ mod test{
             let mut cpu = CPU::new();
             let value = u8::next_random(0xFF);
 
-            cpu.execute(Instruction::LDRN(receiver, value));
+            cpu.execute(Instruction::LDRN(receiver));
 
             assert_eq!(value, cpu.get_register_value(receiver));
         }
@@ -467,20 +380,6 @@ mod test{
 
                 assert_eq!(source_value, receiver_value);
             }
-        }
-    }
-
-    #[test]
-    fn test_get_target_register(){
-        let mut cpu = CPU::new();
-        for target in ArithmeticTarget::iter(){
-            assert_eq!(0x0, *cpu.get_register_pointer(target));
-        }
-        for target in ArithmeticTarget::iter(){
-            let val: u8 = u8::next_random(0xFF);
-            *cpu.get_register_pointer(target) = val;
-
-            assert_eq!(val as u8, cpu.get_register_value(target));
         }
     }
 

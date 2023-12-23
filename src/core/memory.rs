@@ -1,13 +1,14 @@
 #[derive(Debug)]
 pub (super) struct MemoryBus {
-    memory: [u8; 0xFFFF]
+    //TODO: check if this is correct, as the guide stated 0xFFFF had to be used, but that caused oob
+    memory: [u8; 0x10000]
 }
 
 impl MemoryBus {
 
     pub (super) fn new() -> Self {
         MemoryBus {
-            memory: [0; 0xFFFF]
+            memory: [0; 0x10000]
         }
     }
     pub (super) fn read_byte(&self, address: u16) -> u8 {
