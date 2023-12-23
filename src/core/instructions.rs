@@ -3,17 +3,17 @@ pub (super) enum Instruction {
     ADD(ArithmeticTarget),
     ADDHL(ArithmeticTarget16),
     ADC(ArithmeticTarget),
-    //SUB(ArithmeticTarget)
+    // SUB(ArithmeticTarget)
     // Loads data from the second register to the first
     LDR(ArithmeticTarget, ArithmeticTarget),
-    // Loads value N into register R
-    LDRN(ArithmeticTarget, u8),
+    // Loads value N (from pc) into register R
+    LDRN(ArithmeticTarget),
     // Loads to R, data from the absolute address specified by HL
     LDRHL(ArithmeticTarget),
     // Loads to the absolute address specified by HL, data from register R
     LDHLR(ArithmeticTarget),
-    // Loads to the absolute address specified by HL, the value N
-    LDHLN(u8),
+    // Loads to the absolute address specified by HL, the value N (from pc)
+    LDHLN,
     // Loads to the register A, data from the absolute address specified by BC
     LDABC,
     // Loads to the register A, data from the absolute address specified by DE
@@ -22,18 +22,18 @@ pub (super) enum Instruction {
     LDBCA,
     // Loads to the address specified by DE, data from A
     LDDEA,
-    // Loads to the register A, data from the absolute address NN
-    LDANN(u16),
-    // Loads to the absolute address NN, data from A
-    LDNNA(u16),
+    // Loads to the register A, data from the absolute address NN (from pc)
+    LDANN,
+    // Loads to the absolute address NN (from pc), data from A
+    LDNNA,
     // Loads to A, data from the absolute address 0xFF00 + C
     LDHAC,
     // Loads to the absolute address 0xFF00 + C, data from A
     LDHCA,
-    // Loads to A, data from the absolute address 0xFF00 + N
-    LDHAN(u8),
-    // Loads to the absolute address 0xFF00 + N, data from A
-    LDHNA(u8),
+    // Loads to A, data from the absolute address 0xFF00 + N (from pc)
+    LDHAN,
+    // Loads to the absolute address 0xFF00 + N (from pc), data from A
+    LDHNA,
     // Loads to A, data from the absolute address HL, then decrements HL by 1
     LDAHLDEC,
     // Loads to the absolute address HL, data from A, then decrements HL

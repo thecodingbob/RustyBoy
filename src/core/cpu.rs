@@ -27,111 +27,98 @@ impl CPU {
         }
 
         if let Some(instruction) = Instruction::from_byte(instruction_byte, is_prefixed){
-            let next_program_counter = self.execute(instruction);
-            self.program_counter = next_program_counter;
+            self.execute(instruction);
         } else {
             let description = format!("0x{}{:x}", if is_prefixed { "cb" } else { "" }, instruction_byte);
             panic!("Unknown instruction for: 0x{}", description)
         };
     }
 
-    fn execute(&mut self, instruction: Instruction) -> u16 {
+    fn execute(&mut self, instruction: Instruction) {
         match instruction {
             Instruction::ADD(target) => {
                 self.add(target);
-                self.program_counter.wrapping_add(1)
             },
             Instruction::ADDHL(target) => {
                 self.add_hl(target);
-                self.program_counter.wrapping_add(1)
             },
             Instruction::ADC(target) => {
                 self.adc(target);
-                self.program_counter.wrapping_add(1)
             },
             Instruction::LDR(source, receiver) => {
                 *self.get_register_pointer(receiver) = self.get_register_value(source);
-                self.program_counter.wrapping_add(1)
             },
-            Instruction::LDRN(receiver, value) => {
-                *self.get_register_pointer(receiver) = value;
-                self.program_counter.wrapping_add(2)
+            Instruction::LDRN(receiver) => {
+                let n = self.read_and_increment_pc();
+                *self.get_register_pointer(receiver) = n;
             },
             Instruction::LDRHL(receiver) => {
                 let address = self.registers.get_hl();
                 let value = self.bus.read_byte(address);
                 *self.get_register_pointer(receiver) = value;
-                self.program_counter.wrapping_add(1)
             },
             Instruction::LDHLR(source) => {
                 let value = self.get_register_value(source);
                 let address = self.registers.get_hl();
                 self.bus.write_byte(address, value);
-                self.program_counter.wrapping_add(1)
             },
-            Instruction::LDHLN(value) => {
+            Instruction::LDHLN => {
                 let address = self.registers.get_hl();
-                self.bus.write_byte(address, value);
-                self.program_counter.wrapping_add(2)
-                //TODO: start from here managing the program counter values
+                let n = self.read_and_increment_pc();
+                self.bus.write_byte(address, n);
             },
             Instruction::LDABC => {
                 let address = self.registers.get_bc();
                 let value = self.bus.read_byte(address);
                 self.registers.a = value;
-                self.program_counter.wrapping_add(1)
             },
             Instruction::LDADE => {
                 let address = self.registers.get_de();
                 let value = self.bus.read_byte(address);
                 self.registers.a = value;
-                self.program_counter.wrapping_add(1)
             },
             Instruction::LDBCA => {
                 let address = self.registers.get_bc();
                 let value = self.registers.a;
                 self.bus.write_byte(address, value);
-                self.program_counter.wrapping_add(1)
             },
             Instruction::LDDEA => {
                 let address = self.registers.get_de();
                 let value = self.registers.a;
                 self.bus.write_byte(address, value);
-                self.program_counter.wrapping_add(1)
             },
-            Instruction::LDANN(address) => {
-                let value = self.bus.read_byte(address);
+            Instruction::LDANN => {
+                let lsb_address = self.read_and_increment_pc();
+                let msb_address = self.read_and_increment_pc();
+                let value = self.bus.read_byte(join_u8(msb_address, lsb_address));
                 self.registers.a = value;
-                self.program_counter.wrapping_add(1)
             },
-            Instruction::LDNNA(address) => {
+            Instruction::LDNNA => {
                 let value = self.registers.a;
+                let address = self.read_address_and_increment_pc();
                 self.bus.write_byte(address, value);
-                self.program_counter.wrapping_add(1)
             },
             Instruction::LDHAC => {
                 let address = join_u8(0xFF, self.registers.c);
                 let value = self.bus.read_byte(address);
                 self.registers.a = value;
-                self.program_counter.wrapping_add(1)
             },
             Instruction::LDHCA => {
                 let address = join_u8(0xFF, self.registers.c);
                 let value = self.registers.a;
                 self.bus.write_byte(address, value);
-                self.program_counter.wrapping_add(1)
             },
-            Instruction::LDHAN(address_least_signficant_byte) => {
-                let address = join_u8(0xFF, address_least_signficant_byte);
+            Instruction::LDHAN => {
+                let lsb_address = self.read_and_increment_pc();
+                let address = join_u8(0xFF, lsb_address);
                 let value = self.bus.read_byte(address);
                 self.registers.a = value;
-                self.program_counter.wrapping_add(1)
             }
-            Instruction::LDHNA(address_least_significant_byte) => {
-                let address = join_u8(0xFF, address_least_significant_byte);
+            Instruction::LDHNA => {
+                let lsb_address = self.read_and_increment_pc();
+                let address = join_u8(0xFF, lsb_address);
                 let value = self.registers.a;
                 self.bus.write_byte(address, value);
-                self.program_counter.wrapping_add(1)
             },
             Instruction::LDAHLDEC => {
                 let address = self.registers.get_hl();
@@ -139,7 +126,6 @@ impl CPU {
 
                 self.registers.a = value;
                 self.registers.set_hl(address.wrapping_sub(1));
-                self.program_counter.wrapping_add(1)
             },
             Instruction::LDHLDECA => {
                 let address = self.registers.get_hl();
@@ -147,7 +133,6 @@ impl CPU {
 
                 self.bus.write_byte(address, value);
                 self.registers.set_hl(address.wrapping_sub(1));
-                self.program_counter.wrapping_add(1)
             },
             Instruction::LDAHLINC => {
                 let address = self.registers.get_hl();
@@ -155,7 +140,6 @@ impl CPU {
 
                 self.registers.a = value;
                 self.registers.set_hl(address.wrapping_add(1));
-                self.program_counter.wrapping_add(1)
             },
             Instruction::LDHLINCA => {
                 let address = self.registers.get_hl();
@@ -163,7 +147,6 @@ impl CPU {
 
                 self.bus.write_byte(address, value);
                 self.registers.set_hl(address.wrapping_add(1));
-                self.program_counter.wrapping_add(1)
             },
             Instruction::JP(jump_condition) => {
                 let should_jump = match jump_condition {
@@ -176,6 +159,18 @@ impl CPU {
                 self.jump(jump_condition)
             }
         }
+    }
+
+    fn read_and_increment_pc(&mut self) -> u8 {
+        let address = self.program_counter;
+        self.program_counter = address.wrapping_add(1);
+        self.bus.read_byte(address)
+    }
+
+    fn read_address_and_increment_pc(&mut self) -> u16 {
+        let lsb_address = self.read_and_increment_pc();
+        let msb_address = self.read_and_increment_pc();
+        join_u8(msb_address, lsb_address)
     }
 
     fn get_register_value(&mut self, target: ArithmeticTarget) -> u8 {
