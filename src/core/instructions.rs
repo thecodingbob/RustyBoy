@@ -1,17 +1,17 @@
 use strum::EnumIter;
 pub (super) enum Instruction {
-    ADD(ArithmeticTarget),
-    ADDHL(ArithmeticTarget16),
-    ADC(ArithmeticTarget),
+    ADD(RegisterTarget),
+    ADDHL(RegisterTarget16),
+    ADC(RegisterTarget),
     // SUB(ArithmeticTarget)
     // Loads data from the second register to the first
-    LDR(ArithmeticTarget, ArithmeticTarget),
+    LDRR(RegisterTarget, RegisterTarget),
     // Loads value N (from pc) into register R
-    LDRN(ArithmeticTarget),
+    LDRN(RegisterTarget),
     // Loads to R, data from the absolute address specified by HL
-    LDRHL(ArithmeticTarget),
+    LDRHL(RegisterTarget),
     // Loads to the absolute address specified by HL, data from register R
-    LDHLR(ArithmeticTarget),
+    LDHLR(RegisterTarget),
     // Loads to the absolute address specified by HL, the value N (from pc)
     LDHLN,
     // Loads to the register A, data from the absolute address specified by BC
@@ -67,12 +67,12 @@ impl Instruction {
 }
 
 #[derive(Debug, Clone, Copy, EnumIter)]
-pub (super) enum ArithmeticTarget {
+pub (super) enum RegisterTarget {
     A, B, C, D, E, H, L
 }
 
 #[derive(Debug, Clone, Copy, EnumIter)]
-pub(super) enum ArithmeticTarget16 {
+pub(super) enum RegisterTarget16 {
     BC, DE, HL
 }
 
