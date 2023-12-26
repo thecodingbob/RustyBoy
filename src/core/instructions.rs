@@ -1,8 +1,17 @@
 use strum::EnumIter;
 pub (super) enum Instruction {
-    ADD(RegisterTarget),
-    ADDHL(RegisterTarget16),
-    ADC(RegisterTarget),
+    // Adds to a, value from register R. Sets flags.
+    ADDR(RegisterTarget),
+    // Adds to a, value from address specified by HL. Sets flags.
+    ADDHL,
+    // Adds to a, the value N (from pc). Sets flags.
+    ADDN,
+    // Adds to a, value from register R and carry. Sets flags.
+    ADCR(RegisterTarget),
+    // Adds to a, value from address specified by HL and carry. Sets flags.
+    ADCHL,
+    // Adds to a, the value N (from pc) and carry. Sets flags.
+    ADCN,
     // SUB(ArithmeticTarget)
     // Loads data from the second register to the first
     LDRR(RegisterTarget, RegisterTarget),

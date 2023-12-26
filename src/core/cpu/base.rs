@@ -35,15 +35,24 @@ impl CPU {
     fn execute(&mut self, instruction: Instruction) {
         match instruction {
             // 8 bit arithmetic
-            Instruction::ADD(target) => {
-                self.add(target);
+            Instruction::ADDR(target) => {
+                self.add_r(target);
             },
-            Instruction::ADDHL(target) => {
-                self.add_hl(target);
+            Instruction::ADDHL => {
+                self.add_hl();
             },
-            Instruction::ADC(target) => {
-                self.adc(target);
+            Instruction::ADDN => {
+                self.add_n();
+            }
+            Instruction::ADCR(target) => {
+                self.adc_r(target);
             },
+            Instruction::ADCHL =>{
+                self.adc_hl();
+            },
+            Instruction::ADCN => {
+                self.adc_n();
+            }
             // 8 bit load
             Instruction::LDRR(source, receiver) => {
                 self.ld_r_r(source, receiver);
@@ -128,7 +137,7 @@ mod test{
         let mut cpu = CPU::new();
         cpu.registers.a = 0x1;
 
-        cpu.execute(Instruction::ADD(RegisterTarget::A));
+        cpu.execute(Instruction::ADDR(RegisterTarget::A));
 
         assert_eq!(0x2, cpu.registers.a);
     }

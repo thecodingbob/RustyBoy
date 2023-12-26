@@ -1,19 +1,33 @@
 use crate::core::cpu::base::CPU;
-use crate::core::instructions::{RegisterTarget, RegisterTarget16};
+use crate::core::instructions::RegisterTarget;
 
 impl CPU{
     // Matching actual instructions /////////////////////
-    pub (super) fn adc(&mut self, target: RegisterTarget){
-        let value = self.get_register_value(target);
-        self.add_constant_carry(value);
-    }
-    pub (super) fn add(&mut self, target: RegisterTarget) {
+    pub (super) fn add_r(&mut self, target: RegisterTarget) {
         let value = self.get_register_value(target);
         self.add_constant(value);
     }
-    pub (super) fn add_hl(&mut self, target: RegisterTarget16) {
-        let target_value = self.get_register_value_16(target);
-        self.add_constant_16(target_value)
+    pub (super) fn add_hl(&mut self) {
+        let address = self.registers.get_hl();
+        let value = self.bus.read_byte(address);
+        self.add_constant(value);
+    }
+    pub (super) fn add_n(&mut self) {
+        let value = self.read_and_increment_pc();
+        self.add_constant(value);
+    }
+    pub (super) fn adc_r(&mut self, target: RegisterTarget){
+        let value = self.get_register_value(target);
+        self.add_constant_carry(value);
+    }
+    pub (super) fn adc_hl(&mut self) {
+        let address = self.registers.get_hl();
+        let value = self.bus.read_byte(address);
+        self.add_constant_carry(value);
+    }
+    pub (super) fn adc_n(&mut self) {
+        let value = self.read_and_increment_pc();
+        self.add_constant_carry(value);
     }
 
     //////////////////////////////////////////////////////
@@ -37,18 +51,10 @@ impl CPU{
         self.registers.f.zero = new_value == 0;
         self.registers.f.subtract = false;
         self.registers.f.carry = did_overflow;
-        self.registers.f.half_carry = ((self.registers.a & 0xF) + (value & 0xF) + ((self.registers.f.carry as u8) & 0xF)) > 0xF;
+        self.registers.f.half_carry = ((self.registers.a & 0xF) + (value & 0xF) + (self.registers.f.carry as u8)) > 0xF;
         self.registers.a = new_value;
     }
-    fn add_constant_16(&mut self, value: u16) {
-        let hl_value = self.registers.get_hl();
-        let (new_value, did_overflow) = hl_value.overflowing_add(value);
-        self.registers.f.zero = new_value == 0;
-        self.registers.f.subtract = false;
-        self.registers.f.carry = did_overflow;
-        self.registers.f.half_carry = ((hl_value & 0xFF) + (value & 0xFF)) > 0xFF;
-        self.registers.set_hl(new_value);
-    }
+
     fn sub_constant(&mut self, value: u8) {
         let (new_value, did_overflow) = self.registers.a.overflowing_sub(value);
         self.registers.f.zero = new_value == 0;
@@ -64,7 +70,7 @@ impl CPU{
 #[cfg(test)]
 mod test{
     use crate::core::cpu::base::CPU;
-    use crate::core::instructions::{RegisterTarget, RegisterTarget16};
+    use crate::core::instructions::RegisterTarget;
     use crate::core::registers::FlagRegister;
 
     #[test]
@@ -121,31 +127,7 @@ mod test{
         }, cpu.registers.f);
     }
 
-    #[test]
-    fn test_add_constant_16(){
-        let mut cpu = CPU::new();
 
-        cpu.add_constant_16(0xABCD);
-        assert_eq!(0xAB, cpu.registers.h);
-        assert_eq!(0xCD, cpu.registers.l);
-        assert_eq!(FlagRegister::from(0b0), cpu.registers.f);
-    }
-
-    #[test]
-    fn test_add_constant_16_flags(){
-        let mut cpu = CPU::new();
-        cpu.registers.set_hl(0xFFFF);
-
-        cpu.add_constant_16(1);
-        assert_eq!(0, cpu.registers.h);
-        assert_eq!(0, cpu.registers.l);
-        assert_eq!(FlagRegister{
-            zero: true,
-            subtract: false,
-            half_carry: true,
-            carry: true
-        }, cpu.registers.f);
-    }
 
     #[test]
     fn test_sub_constant(){
@@ -162,22 +144,22 @@ mod test{
         }, cpu.registers.f);
     }
 
-    // 8 Bit arithmetic
+    // matching instructions
     #[test]
     fn test_add(){
         let mut cpu = CPU::new();
         cpu.registers.c = 0x10;
         cpu.registers.h = 0x3;
 
-        cpu.add(RegisterTarget::C);
+        cpu.add_r(RegisterTarget::C);
 
         assert_eq!(0x10, cpu.registers.a);
 
-        cpu.add(RegisterTarget::H);
+        cpu.add_r(RegisterTarget::H);
 
         assert_eq!(0x13, cpu.registers.a);
 
-        cpu.add(RegisterTarget::A);
+        cpu.add_r(RegisterTarget::A);
 
         assert_eq!(0x26, cpu.registers.a);
     }
@@ -188,7 +170,7 @@ mod test{
         cpu.registers.f.carry = true;
         cpu.registers.e = 0x13;
 
-        cpu.adc(RegisterTarget::E);
+        cpu.adc_r(RegisterTarget::E);
 
         assert_eq!(0x14, cpu.registers.a);
         assert_eq!(FlagRegister::from(0b0), cpu.registers.f);
@@ -198,19 +180,82 @@ mod test{
     #[test]
     fn test_add_hl(){
         let mut cpu = CPU::new();
-        cpu.registers.set_bc(0x1234);
+        let hl_address = 0x1234;
+        let value = 0x11;
+        let a_value = 0xF0;
+        cpu.registers.set_hl(hl_address);
+        cpu.bus.write_byte(hl_address, value);
+        cpu.registers.a = a_value;
 
-        cpu.add_hl(RegisterTarget16::BC);
+        cpu.add_hl();
 
-        assert_eq!(0x12, cpu.registers.h);
-        assert_eq!(0x34, cpu.registers.l);
+        assert_eq!(0x1, cpu.registers.a);
+        assert_eq!(FlagRegister{
+            zero: false,
+            subtract: false,
+            half_carry: false,
+            carry: true,
+        }, cpu.registers.f);
+    }
+
+
+    #[test]
+    fn test_adc_r(){
+        let mut cpu = CPU::new();
+        cpu.registers.b = 0x2;
+        cpu.registers.f.carry = true;
+
+        cpu.adc_r(RegisterTarget::B);
+
+        assert_eq!(0x3, cpu.registers.a);
         assert_eq!(FlagRegister::from(0b0), cpu.registers.f);
+    }
+    #[test]
+    fn test_adc_hl() {
+        let mut cpu = CPU::new();
+        let hl_address = 0x1234;
+        let value = 0x11;
+        let a_value = 0xF0;
+        cpu.registers.set_hl(hl_address);
+        cpu.bus.write_byte(hl_address, value);
+        cpu.registers.a = a_value;
 
-        cpu.add_hl(RegisterTarget16::HL);
+        cpu.adc_hl();
 
-        assert_eq!(0x24, cpu.registers.h);
-        assert_eq!(0x68, cpu.registers.l);
+        assert_eq!(0x1, cpu.registers.a);
+        assert_eq!(FlagRegister{
+            zero: false,
+            subtract: false,
+            half_carry: false,
+            carry: true,
+        }, cpu.registers.f);
+    }
+
+    #[test]
+    fn test_adc_n() {
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x0;
+        cpu.bus.write_byte(0x0, 0x10);
+        cpu.registers.f.carry = true;
+
+        cpu.adc_n();
+
+        assert_eq!(0x11, cpu.registers.a);
         assert_eq!(FlagRegister::from(0b0), cpu.registers.f);
+        assert_eq!(0x1, cpu.program_counter);
+    }
+
+    #[test]
+    fn test_add_n(){
+        let mut cpu = CPU::new();
+        cpu.program_counter = 0x0;
+        cpu.bus.write_byte(0x0, 0x10);
+
+        cpu.add_n();
+
+        assert_eq!(0x10, cpu.registers.a);
+        assert_eq!(FlagRegister::from(0b0), cpu.registers.f);
+        assert_eq!(0x1, cpu.program_counter);
     }
 
 }
