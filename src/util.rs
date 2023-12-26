@@ -2,18 +2,18 @@ use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 // pseudo-random number
 pub trait Randomizable {
-    fn next_random(max: Self) -> Self;
+    fn random() -> Self;
 }
 
 impl Randomizable for u8 {
-    fn next_random(max: u8) -> u8 {
-        (rand_from_system_time() % (max as u32)) as u8
+    fn random() -> u8 {
+        (rand_from_system_time() % (u8::MAX as u32) + 1) as u8
     }
 }
 
 impl Randomizable for u16 {
-    fn next_random(max: u16) -> u16 {
-        (rand_from_system_time() % (max as u32)) as u16
+    fn random() -> u16 {
+        (rand_from_system_time() % (u16::MAX as u32) + 1) as u16
     }
 }
 

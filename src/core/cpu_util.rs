@@ -158,7 +158,7 @@ mod test{
     fn test_set_register_value(){
         let mut cpu = CPU::new();
         for target in RegisterTarget::iter(){
-            let val = u8::next_random(0xFF);
+            let val = u8::random();
             cpu.set_register_value(target, val);
 
             assert_eq!(val, *cpu.get_register_pointer(target));
@@ -178,7 +178,7 @@ mod test{
             assert_eq!(0x0, *cpu.get_register_pointer(target));
         }
         for target in RegisterTarget::iter(){
-            let val = u8::next_random(0xFF);
+            let val = u8::random();
             *cpu.get_register_pointer(target) = val;
 
             assert_eq!(val, cpu.get_register_value(target));
@@ -192,7 +192,7 @@ mod test{
             assert_eq!(0x0, cpu.get_register_value_16(target));
         }
         for target in RegisterTarget16::iter(){
-            let val = u16::next_random(0xFFFF);
+            let val = u16::random();
             let (msb, lsb) = split_u16(val);
             let (msb_target, lsb_target) = cpu.get_8_bit_targets_from_16_bit_target(target);
             cpu.set_register_value(msb_target, msb);
@@ -209,7 +209,7 @@ mod test{
             assert_eq!(0x0, cpu.get_register_value_16(target));
         }
         for target in RegisterTarget16::iter(){
-            let val = u16::next_random(0xFFFF);
+            let val = u16::random();
 
             cpu.set_register_value_16(target, val);
 
