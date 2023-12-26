@@ -18,12 +18,11 @@ impl CPU {
     }
 
     fn step(&mut self){
-        let mut instruction_byte = self.bus.read_byte(self.program_counter);
+        let mut instruction_byte = self.read_and_increment_pc();
         let is_prefixed = instruction_byte == 0xCB;
         if is_prefixed {
-            instruction_byte = self.bus.read_byte(self.program_counter.wrapping_add(1));
+            instruction_byte = self.read_and_increment_pc();
         }
-
         if let Some(instruction) = Instruction::from_byte(instruction_byte, is_prefixed){
             self.execute(instruction);
         } else {
