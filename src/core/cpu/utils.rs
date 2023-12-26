@@ -3,19 +3,19 @@ use crate::core::instructions::{RegisterTarget, RegisterTarget16};
 use crate::util::join_u8;
 
 impl CPU{
-    pub fn read_and_increment_pc(&mut self) -> u8 {
+    pub (super) fn read_and_increment_pc(&mut self) -> u8 {
         let address = self.program_counter;
         self.program_counter = address.wrapping_add(1);
         self.bus.read_byte(address)
     }
 
-    pub fn read_address_and_increment_pc(&mut self) -> u16 {
+    pub (super) fn read_address_and_increment_pc(&mut self) -> u16 {
         let lsb_address = self.read_and_increment_pc();
         let msb_address = self.read_and_increment_pc();
         join_u8(msb_address, lsb_address)
     }
 
-    pub fn get_register_value(&mut self, target: RegisterTarget) -> u8 {
+    pub (super) fn get_register_value(&mut self, target: RegisterTarget) -> u8 {
         match target {
             RegisterTarget::A => self.registers.a,
             RegisterTarget::B => self.registers.b,
@@ -27,7 +27,7 @@ impl CPU{
         }
     }
 
-    pub fn get_register_pointer(&mut self, target: RegisterTarget) -> &mut u8 {
+    pub (super) fn get_register_pointer(&mut self, target: RegisterTarget) -> &mut u8 {
         match target {
             RegisterTarget::A => &mut self.registers.a,
             RegisterTarget::B => &mut self.registers.b,
@@ -39,11 +39,11 @@ impl CPU{
         }
     }
 
-    pub fn set_register_value(&mut self, target: RegisterTarget, value: u8) {
+    pub (super) fn set_register_value(&mut self, target: RegisterTarget, value: u8) {
         *self.get_register_pointer(target) = value;
     }
 
-    pub fn get_register_value_16(&mut self, target: RegisterTarget16) -> u16 {
+    pub (super) fn get_register_value_16(&mut self, target: RegisterTarget16) -> u16 {
         match target {
             RegisterTarget16::BC => self.registers.get_bc(),
             RegisterTarget16::DE => self.registers.get_de(),
@@ -51,7 +51,7 @@ impl CPU{
         }
     }
 
-    pub fn set_register_value_16(&mut self, target: RegisterTarget16, value: u16) {
+    pub (super) fn set_register_value_16(&mut self, target: RegisterTarget16, value: u16) {
         match target {
             RegisterTarget16::BC => self.registers.set_bc(value),
             RegisterTarget16::DE => self.registers.set_de(value),
