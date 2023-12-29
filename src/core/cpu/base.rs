@@ -112,6 +112,9 @@ impl CPU {
             Instruction::LDHLINCA => {
                 self.ld_hl_inc_a();
             },
+            Instruction::LDRRNN(target) => {
+                self.ld_rr_nn(target);
+            }
             // jump instructions
             Instruction::JPNN => {
                 self.jp_nn();

@@ -53,6 +53,8 @@ pub(crate) enum Instruction {
     LDAHLINC,
     // Loads to the absolute address HL, data from A, then decrements HL
     LDHLINCA,
+    // Loads the immediate 16 bit data NN into the 16 bit register RR
+    LDRRNN(RegisterTarget16),
     // Unconditional jump to the nn address (indirect pc)
     JPNN,
     // Jumps to the nn address (indirect pc) if the JumpCondition is satisfied

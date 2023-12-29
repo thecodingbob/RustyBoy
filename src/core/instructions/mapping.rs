@@ -1,7 +1,8 @@
 use crate::core::instructions::definitions::Instruction;
 use crate::core::instructions::definitions::Instruction::*;
 use crate::core::instructions::definitions::JumpCondition::*;
-use crate::core::instructions::definitions::RegisterTarget::{A, B, C, D, E, H, L};
+use crate::core::instructions::definitions::RegisterTarget::*;
+use crate::core::instructions::definitions::RegisterTarget16::*;
 
 const INSTRUCTION_ARR:[Option<Instruction>; 256] = init_instruction_array();
 const PREFIX_INSTRUCTION_ARR:[Option<Instruction>; 256] = init_prefix_instruction_array();
@@ -24,7 +25,8 @@ impl Instruction {
 
 const fn init_instruction_array() -> [Option<Instruction>; 256] {
     let mut a = [None; 256];
-    
+
+    a[0x01] = Some(LDRRNN(BC));
     a[0x02] = Some(LDBCA);
     
     a[0x06] = Some(LDRN(B));
@@ -32,7 +34,8 @@ const fn init_instruction_array() -> [Option<Instruction>; 256] {
     a[0x0A] = Some(LDABC);
     
     a[0x0E] = Some(LDRN(C));
-    
+
+    a[0x11] = Some(LDRRNN(DE));
     a[0x12] = Some(LDDEA);
     
     a[0x16] = Some(LDRN(D));
@@ -40,7 +43,8 @@ const fn init_instruction_array() -> [Option<Instruction>; 256] {
     a[0x1A] = Some(LDADE);
     
     a[0x1E] = Some(LDRN(E));
-    
+
+    a[0x21] = Some(LDRRNN(HL));
     a[0x22] = Some(LDHLINCA);
     
     a[0x26] = Some(LDRN(H));
