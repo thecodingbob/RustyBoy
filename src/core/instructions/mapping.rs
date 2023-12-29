@@ -3,13 +3,14 @@ use crate::core::instructions::definitions::Instruction::*;
 use crate::core::instructions::definitions::RegisterTarget::{A, B, C, D, E, H, L};
 
 const INSTRUCTION_ARR:[Option<Instruction>; 256] = init_instruction_array();
+const PREFIX_INSTRUCTION_ARR:[Option<Instruction>; 256] = init_prefix_instruction_array();
 
 
 impl Instruction {
 
     pub(crate) fn from_byte(byte: u8, is_prefixed: bool) -> Option<Instruction> {
         if is_prefixed {
-            Instruction::from_byte_prefixed(byte)
+            PREFIX_INSTRUCTION_ARR[byte as usize]
         } else {
             INSTRUCTION_ARR[byte as usize]
         }
@@ -143,19 +144,32 @@ const fn init_instruction_array() -> [Option<Instruction>; 256] {
     array
 }
 
+const fn init_prefix_instruction_array() -> [Option<Instruction>; 256] {
+    let mut array = [None; 256];
+    array
+}
+
 #[cfg(test)]
 mod test{
-    use crate::core::instructions::mapping::init_instruction_array;
+    use crate::core::instructions::definitions::Instruction;
+    use crate::core::instructions::mapping::{init_instruction_array, init_prefix_instruction_array};
 
     #[test]
     fn test_init_instruction_array(){
-        let mapping = init_instruction_array();
+        test_no_duplicates(init_instruction_array());
+    }
 
-        for (i, el1) in mapping.iter().enumerate() {
+    #[test]
+    fn test_init_prefix_instruction_array(){
+        test_no_duplicates(init_prefix_instruction_array());
+    }
+
+    fn test_no_duplicates(array: [Option<Instruction>; 256]){
+        for (i, el1) in array.iter().enumerate() {
             if *el1 == None {
                 continue;
             }
-            for el2 in &mapping[(i + 1)..] {
+            for el2 in &array[(i + 1)..] {
                 if *el2 == None {
                     continue;
                 }
