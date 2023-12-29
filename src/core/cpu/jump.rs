@@ -1,5 +1,5 @@
 use crate::core::cpu::base::CPU;
-use crate::core::instructions::JumpCondition;
+use crate::core::instructions::definitions::JumpCondition;
 
 impl CPU{
     pub (super) fn jp(&mut self, jump_condition: JumpCondition){

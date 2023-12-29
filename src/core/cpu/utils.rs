@@ -1,5 +1,5 @@
 use crate::core::cpu::base::CPU;
-use crate::core::instructions::{RegisterTarget, RegisterTarget16};
+use crate::core::instructions::definitions::{RegisterTarget, RegisterTarget16};
 use crate::util::join_u8;
 
 impl CPU{
@@ -72,7 +72,7 @@ impl CPU{
 mod test{
     use strum::IntoEnumIterator;
     use crate::core::cpu::base::CPU;
-    use crate::core::instructions::{RegisterTarget, RegisterTarget16};
+    use crate::core::instructions::definitions::{RegisterTarget, RegisterTarget16};
     use crate::util::{join_u8, Randomizable, split_u16};
 
     #[test]

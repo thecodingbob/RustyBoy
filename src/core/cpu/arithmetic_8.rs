@@ -1,5 +1,5 @@
 use crate::core::cpu::base::CPU;
-use crate::core::instructions::RegisterTarget;
+use crate::core::instructions::definitions::RegisterTarget;
 
 impl CPU{
     // Matching actual instructions /////////////////////
@@ -70,7 +70,7 @@ impl CPU{
 #[cfg(test)]
 mod test{
     use crate::core::cpu::base::CPU;
-    use crate::core::instructions::RegisterTarget;
+    use crate::core::instructions::definitions::RegisterTarget;
     use crate::core::registers::FlagRegister;
 
     #[test]

@@ -1,4 +1,4 @@
-use crate::core::instructions::Instruction;
+use crate::core::instructions::definitions::Instruction;
 use crate::core::memory::MemoryBus;
 use crate::core::registers::Registers;
 
@@ -122,7 +122,7 @@ impl CPU {
 #[cfg(test)]
 mod test{
     use crate::core::cpu::base::CPU;
-    use crate::core::instructions::{RegisterTarget, Instruction};
+    use crate::core::instructions::definitions::{Instruction, RegisterTarget};
 
     #[test]
     fn test_step(){

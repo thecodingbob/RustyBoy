@@ -1,9 +1,8 @@
 use strum::EnumIter;
 use Instruction::*;
 use RegisterTarget::*;
-use crate::core::instructions::Instruction::LDRN;
 
-pub (super) enum Instruction {
+pub(crate) enum Instruction {
     // Adds to a, value from register R. Sets flags.
     ADDR(RegisterTarget),
     // Adds to a, value from address specified by HL. Sets flags.
@@ -59,67 +58,22 @@ pub (super) enum Instruction {
     JP(JumpCondition)
 }
 
-impl Instruction {
-    pub (super) fn from_byte(byte: u8, is_prefixed: bool) -> Option<Instruction>{
-        if is_prefixed {
-            Instruction::from_byte_not_prefixed(byte)
-        } else {
-            Instruction::from_byte_prefixed(byte)
-        }
-    }
-
-    fn from_byte_prefixed(byte: u8) -> Option<Instruction>{
-        match byte {
-            0x02 => Some(LDBCA),
-            0x06 => Some(LDRN(B)),
-            0x0A => Some(LDABC),
-            0x0E => Some(LDRN(C)),
-            0x12 => Some(LDDEA),
-            0x16 => Some(LDRN(D)),
-            0x1A => Some(LDADE),
-            0x1E => Some(LDRN(E)),
-            0x22 => Some(LDHLINCA),
-            0x26 => Some(LDRN(H)),
-            0x2A => Some(LDAHLINC),
-            0x2E => Some(LDRN(L)),
-            0x32 => Some(LDHLDECA),
-            0x36 => Some(LDHLN),
-            0x3A => Some(LDAHLDEC),
-            0x3E => Some(LDRN(A)),
-            0x40 => Some(LDRR(B,B)),
-            0x41 => Some(LDRR(B,C)),
-            0x42 => Some(LDRR(B,D)),
-            0x43 => Some(LDRR(B,E)),
-            0x44 => Some(LDRR(B,H)),
-            0x45 => Some(LDRR(B,L)),
-            0x46 => Some(LDRHL(B)),
-            0x47 => Some(LDRR(B,A)),
-            _ => None
-        }
-    }
-
-    fn from_byte_not_prefixed(byte: u8) -> Option<Instruction>{
-        match byte {
-            _ => None
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, EnumIter)]
-pub (super) enum RegisterTarget {
+#[derive(Debug, Clone, Copy, EnumIter, PartialEq)]
+pub (crate) enum RegisterTarget {
     A, B, C, D, E, H, L
 }
 
-#[derive(Debug, Clone, Copy, EnumIter)]
-pub(super) enum RegisterTarget16 {
+#[derive(Debug, Clone, Copy, EnumIter, PartialEq)]
+pub(crate) enum RegisterTarget16 {
     BC, DE, HL
 }
 
 #[derive(Debug)]
-pub (super) enum JumpCondition {
+pub (crate) enum JumpCondition {
     NotZero,
     Zero,
     NotCarry,
     Carry,
     Always
 }
+

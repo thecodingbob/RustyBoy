@@ -1,5 +1,5 @@
 use crate::core::cpu::base::CPU;
-use crate::core::instructions::RegisterTarget;
+use crate::core::instructions::definitions::RegisterTarget;
 use crate::util::join_u8;
 
 impl CPU{
@@ -131,7 +131,7 @@ mod test{
     use strum::IntoEnumIterator;
     use crate::core::cpu::base::CPU;
     use crate::core::cpu::load_8::get_absolute_address_from_lsb;
-    use crate::core::instructions::{RegisterTarget};
+    use crate::core::instructions::definitions::RegisterTarget;
     use crate::util::{join_u8, Randomizable, split_u16};
 
     #[test]
