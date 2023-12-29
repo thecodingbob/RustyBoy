@@ -2,6 +2,7 @@ use strum::EnumIter;
 use Instruction::*;
 use RegisterTarget::*;
 
+#[derive(Debug, Clone, Copy, PartialEq, Hash)]
 pub(crate) enum Instruction {
     // Adds to a, value from register R. Sets flags.
     ADDR(RegisterTarget),
@@ -58,17 +59,17 @@ pub(crate) enum Instruction {
     JP(JumpCondition)
 }
 
-#[derive(Debug, Clone, Copy, EnumIter, PartialEq)]
+#[derive(Debug, Clone, Copy, EnumIter, PartialEq, Hash)]
 pub (crate) enum RegisterTarget {
     A, B, C, D, E, H, L
 }
 
-#[derive(Debug, Clone, Copy, EnumIter, PartialEq)]
+#[derive(Debug, Clone, Copy, EnumIter, PartialEq, Hash)]
 pub(crate) enum RegisterTarget16 {
     BC, DE, HL
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Hash)]
 pub (crate) enum JumpCondition {
     NotZero,
     Zero,

@@ -20,6 +20,8 @@ impl MemoryBus {
     }
 }
 
+#[cfg(test)]
+
 mod test{
     use crate::core::memory::MemoryBus;
 
