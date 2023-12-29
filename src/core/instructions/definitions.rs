@@ -1,6 +1,4 @@
 use strum::EnumIter;
-use Instruction::*;
-use RegisterTarget::*;
 
 #[derive(Debug, Clone, Copy, PartialEq, Hash)]
 pub(crate) enum Instruction {

@@ -4,15 +4,17 @@ use crate::core::registers::Registers;
 
 #[derive(Debug)]
 pub struct CPU {
-    pub (super) registers: Registers,
-    pub (super) program_counter: u16,
-    pub (super) bus: MemoryBus
+    pub(super) registers: Registers,
+    pub(super) program_counter: u16,
+    pub(super) stack_pointer: u16,
+    pub(super) bus: MemoryBus
 }
 impl CPU {
     pub (super) fn new() -> Self {
         CPU{
             registers: Registers::new(),
             program_counter: 0,
+            stack_pointer:0,
             bus: MemoryBus::new()
         }
     }
