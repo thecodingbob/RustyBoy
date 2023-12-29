@@ -1,5 +1,6 @@
 use crate::core::instructions::definitions::Instruction;
 use crate::core::instructions::definitions::Instruction::*;
+use crate::core::instructions::definitions::JumpCondition::*;
 use crate::core::instructions::definitions::RegisterTarget::{A, B, C, D, E, H, L};
 
 const INSTRUCTION_ARR:[Option<Instruction>; 256] = init_instruction_array();
@@ -137,9 +138,18 @@ const fn init_instruction_array() -> [Option<Instruction>; 256] {
     a[0x8E] = Some(ADCHL);
     a[0x8F] = Some(ADCR(A));
 
+    a[0xC2] = Some(JPCCNN(NotZero));
+    a[0xC3] = Some(JPNN);
+
     a[0xC6] = Some(ADDN);
 
+    a[0xCA] = Some(JPCCNN(Zero));
+
     a[0xCE] = Some(ADCN);
+
+    a[0xD2] = Some(JPCCNN(NotCarry));
+
+    a[0xDA] = Some(JPCCNN(Carry));
 
     a[0xE0] = Some(LDHNA);
 

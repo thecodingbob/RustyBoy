@@ -55,8 +55,10 @@ pub(crate) enum Instruction {
     LDAHLINC,
     // Loads to the absolute address HL, data from A, then decrements HL
     LDHLINCA,
-    // Jumps if the JumpCondition is satisfied
-    JP(JumpCondition)
+    // Unconditional jump to the nn address (indirect pc)
+    JPNN,
+    // Jumps to the nn address (indirect pc) if the JumpCondition is satisfied
+    JPCCNN(JumpCondition)
 }
 
 #[derive(Debug, Clone, Copy, EnumIter, PartialEq, Hash)]
@@ -74,7 +76,6 @@ pub (crate) enum JumpCondition {
     NotZero,
     Zero,
     NotCarry,
-    Carry,
-    Always
+    Carry
 }
 

@@ -111,8 +111,11 @@ impl CPU {
                 self.ld_hl_inc_a();
             },
             // jump instructions
-            Instruction::JP(jump_condition) => {
-                self.jp(jump_condition);
+            Instruction::JPNN => {
+                self.jp_nn();
+            }
+            Instruction::JPCCNN(jump_condition) => {
+                self.jp_cc_nn(jump_condition);
             }
         }
     }
