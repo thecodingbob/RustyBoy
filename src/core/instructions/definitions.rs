@@ -3,62 +3,62 @@ use strum::EnumIter;
 #[derive(Debug, Clone, Copy, PartialEq, Hash)]
 pub(crate) enum Instruction {
     // Adds to a, value from register R. Sets flags.
-    ADDR(RegisterTarget),
-    // Adds to a, value from address specified by HL. Sets flags.
-    ADDHL,
+    AddRegister(RegisterTarget),
+    // Adds to a, value from address specified by Hl. Sets flags.
+    AddIndirectHl,
     // Adds to a, the value N (from pc). Sets flags.
-    ADDN,
+    AddN,
     // Adds to a, value from register R and carry. Sets flags.
-    ADCR(RegisterTarget),
-    // Adds to a, value from address specified by HL and carry. Sets flags.
-    ADCHL,
+    AddCarryRegister(RegisterTarget),
+    // Adds to a, value from address specified by Hl and carry. Sets flags.
+    AdcIndirectHl,
     // Adds to a, the value N (from pc) and carry. Sets flags.
-    ADCN,
+    AddCarryN,
     // SUB(ArithmeticTarget)
     // Loads data from the second register to the first
-    LDRR(RegisterTarget, RegisterTarget),
+    LoadRegisterRegister(RegisterTarget, RegisterTarget),
     // Loads value N (from pc) into register R
-    LDRN(RegisterTarget),
-    // Loads to R, data from the absolute address specified by HL
-    LDRHL(RegisterTarget),
-    // Loads to the absolute address specified by HL, data from register R
-    LDHLR(RegisterTarget),
-    // Loads to the absolute address specified by HL, the value N (from pc)
-    LDHLN,
+    LoadRegisterN(RegisterTarget),
+    // Loads to R, data from the absolute address specified by Hl
+    LoadRegisterIndirectHl(RegisterTarget),
+    // Loads to the absolute address specified by Hl, data from register R
+    LoadIndirectHlRegister(RegisterTarget),
+    // Loads to the absolute address specified by Hl, the value N (from pc)
+    LoadIndirectHlN,
     // Loads to the register A, data from the absolute address specified by BC
-    LDABC,
+    LoadAIndirectBc,
     // Loads to the register A, data from the absolute address specified by DE
-    LDADE,
+    LoadAIndirectDe,
     // Loads to the address specified by BC, data from A
-    LDBCA,
+    LoadIndirectBcA,
     // Loads to the address specified by DE, data from A
-    LDDEA,
+    LoadIndirectDeA,
     // Loads to the register A, data from the absolute address NN (from pc)
-    LDANN,
+    LoadANn,
     // Loads to the absolute address NN (from pc), data from A
-    LDNNA,
+    LoadNnA,
     // Loads to A, data from the absolute address 0xFF00 + C
-    LDHAC,
+    LoadHalfAC,
     // Loads to the absolute address 0xFF00 + C, data from A
-    LDHCA,
+    LoadHalfCA,
     // Loads to A, data from the absolute address 0xFF00 + N (from pc)
-    LDHAN,
+    LoadHalfAN,
     // Loads to the absolute address 0xFF00 + N (from pc), data from A
-    LDHNA,
+    LoadHalfNA,
     // Loads to A, data from the absolute address HL, then decrements HL by 1
-    LDAHLDEC,
+    LoadAIndirectHlDecrement,
     // Loads to the absolute address HL, data from A, then decrements HL
-    LDHLDECA,
+    LoadIndirectHlDecrementA,
     // Loads to A, data from the absolute address HL, then increments HL by 1
-    LDAHLINC,
+    LoadAIndirectHlIncrement,
     // Loads to the absolute address HL, data from A, then decrements HL
-    LDHLINCA,
+    LoadIndirectHlIncrementA,
     // Loads the immediate 16 bit data NN into the 16 bit register RR
-    LDRRNN(RegisterTarget16),
+    LoadRegister16Nn(RegisterTarget16),
     // Unconditional jump to the nn address (indirect pc)
-    JPNN,
+    JumpToNn,
     // Jumps to the nn address (indirect pc) if the JumpCondition is satisfied
-    JPCCNN(JumpCondition)
+    JumpConditionalToNn(JumpCondition)
 }
 
 #[derive(Debug, Clone, Copy, EnumIter, PartialEq, Hash)]

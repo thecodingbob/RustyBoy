@@ -26,148 +26,148 @@ impl Instruction {
 const fn init_instruction_array() -> [Option<Instruction>; 256] {
     let mut a = [None; 256];
 
-    a[0x01] = Some(LDRRNN(BC));
-    a[0x02] = Some(LDBCA);
+    a[0x01] = Some(LoadRegister16Nn(BC));
+    a[0x02] = Some(LoadIndirectBcA);
     
-    a[0x06] = Some(LDRN(B));
+    a[0x06] = Some(LoadRegisterN(B));
     
-    a[0x0A] = Some(LDABC);
+    a[0x0A] = Some(LoadAIndirectBc);
     
-    a[0x0E] = Some(LDRN(C));
+    a[0x0E] = Some(LoadRegisterN(C));
 
-    a[0x11] = Some(LDRRNN(DE));
-    a[0x12] = Some(LDDEA);
+    a[0x11] = Some(LoadRegister16Nn(DE));
+    a[0x12] = Some(LoadIndirectDeA);
     
-    a[0x16] = Some(LDRN(D));
+    a[0x16] = Some(LoadRegisterN(D));
     
-    a[0x1A] = Some(LDADE);
+    a[0x1A] = Some(LoadAIndirectDe);
     
-    a[0x1E] = Some(LDRN(E));
+    a[0x1E] = Some(LoadRegisterN(E));
 
-    a[0x21] = Some(LDRRNN(HL));
-    a[0x22] = Some(LDHLINCA);
+    a[0x21] = Some(LoadRegister16Nn(HL));
+    a[0x22] = Some(LoadIndirectHlIncrementA);
     
-    a[0x26] = Some(LDRN(H));
+    a[0x26] = Some(LoadRegisterN(H));
     
-    a[0x2A] = Some(LDAHLINC);
+    a[0x2A] = Some(LoadAIndirectHlIncrement);
     
-    a[0x2E] = Some(LDRN(L));
+    a[0x2E] = Some(LoadRegisterN(L));
     
-    a[0x32] = Some(LDHLDECA);
+    a[0x32] = Some(LoadIndirectHlDecrementA);
     
-    a[0x36] = Some(LDHLN);
+    a[0x36] = Some(LoadIndirectHlN);
     
-    a[0x3A] = Some(LDAHLDEC);
+    a[0x3A] = Some(LoadAIndirectHlDecrement);
     
-    a[0x3E] = Some(LDRN(A));
+    a[0x3E] = Some(LoadRegisterN(A));
     
-    a[0x40] = Some(LDRR(B, B));
-    a[0x41] = Some(LDRR(B, C));
-    a[0x42] = Some(LDRR(B, D));
-    a[0x43] = Some(LDRR(B, E));
-    a[0x44] = Some(LDRR(B, H));
-    a[0x45] = Some(LDRR(B, L));
-    a[0x46] = Some(LDRHL(B));
-    a[0x47] = Some(LDRR(B, A));
-    a[0x48] = Some(LDRR(C, B));
-    a[0x49] = Some(LDRR(C, C));
-    a[0x4A] = Some(LDRR(C, D));
-    a[0x4B] = Some(LDRR(C, E));
-    a[0x4C] = Some(LDRR(C, H));
-    a[0x4D] = Some(LDRR(C, L));
-    a[0x4E] = Some(LDRHL(C));
-    a[0x4F] = Some(LDRR(C, A));
-    a[0x50] = Some(LDRR(D, B));
-    a[0x51] = Some(LDRR(D, C));
-    a[0x52] = Some(LDRR(D, D));
-    a[0x53] = Some(LDRR(D, E));
-    a[0x54] = Some(LDRR(D, H));
-    a[0x55] = Some(LDRR(D, L));
-    a[0x56] = Some(LDRHL(D));
-    a[0x57] = Some(LDRR(D, A));
-    a[0x58] = Some(LDRR(E, B));
-    a[0x59] = Some(LDRR(E, C));
-    a[0x5A] = Some(LDRR(E, D));
-    a[0x5B] = Some(LDRR(E, E));
-    a[0x5C] = Some(LDRR(E, H));
-    a[0x5D] = Some(LDRR(E, L));
-    a[0x5E] = Some(LDRHL(E));
-    a[0x5F] = Some(LDRR(E, A));
-    a[0x60] = Some(LDRR(H, B));
-    a[0x61] = Some(LDRR(H, C));
-    a[0x62] = Some(LDRR(H, D));
-    a[0x63] = Some(LDRR(H, E));
-    a[0x64] = Some(LDRR(H, H));
-    a[0x65] = Some(LDRR(H, L));
-    a[0x66] = Some(LDRHL(H));
-    a[0x67] = Some(LDRR(H, A));
-    a[0x68] = Some(LDRR(L, B));
-    a[0x69] = Some(LDRR(L, C));
-    a[0x6A] = Some(LDRR(L, D));
-    a[0x6B] = Some(LDRR(L, E));
-    a[0x6C] = Some(LDRR(L, H));
-    a[0x6D] = Some(LDRR(L, L));
-    a[0x6E] = Some(LDRHL(L));
-    a[0x6F] = Some(LDRR(L, A));
-    a[0x70] = Some(LDHLR(B));
-    a[0x71] = Some(LDHLR(C));
-    a[0x72] = Some(LDHLR(D));
-    a[0x73] = Some(LDHLR(E));
-    a[0x74] = Some(LDHLR(H));
-    a[0x75] = Some(LDHLR(L));
+    a[0x40] = Some(LoadRegisterRegister(B, B));
+    a[0x41] = Some(LoadRegisterRegister(B, C));
+    a[0x42] = Some(LoadRegisterRegister(B, D));
+    a[0x43] = Some(LoadRegisterRegister(B, E));
+    a[0x44] = Some(LoadRegisterRegister(B, H));
+    a[0x45] = Some(LoadRegisterRegister(B, L));
+    a[0x46] = Some(LoadRegisterIndirectHl(B));
+    a[0x47] = Some(LoadRegisterRegister(B, A));
+    a[0x48] = Some(LoadRegisterRegister(C, B));
+    a[0x49] = Some(LoadRegisterRegister(C, C));
+    a[0x4A] = Some(LoadRegisterRegister(C, D));
+    a[0x4B] = Some(LoadRegisterRegister(C, E));
+    a[0x4C] = Some(LoadRegisterRegister(C, H));
+    a[0x4D] = Some(LoadRegisterRegister(C, L));
+    a[0x4E] = Some(LoadRegisterIndirectHl(C));
+    a[0x4F] = Some(LoadRegisterRegister(C, A));
+    a[0x50] = Some(LoadRegisterRegister(D, B));
+    a[0x51] = Some(LoadRegisterRegister(D, C));
+    a[0x52] = Some(LoadRegisterRegister(D, D));
+    a[0x53] = Some(LoadRegisterRegister(D, E));
+    a[0x54] = Some(LoadRegisterRegister(D, H));
+    a[0x55] = Some(LoadRegisterRegister(D, L));
+    a[0x56] = Some(LoadRegisterIndirectHl(D));
+    a[0x57] = Some(LoadRegisterRegister(D, A));
+    a[0x58] = Some(LoadRegisterRegister(E, B));
+    a[0x59] = Some(LoadRegisterRegister(E, C));
+    a[0x5A] = Some(LoadRegisterRegister(E, D));
+    a[0x5B] = Some(LoadRegisterRegister(E, E));
+    a[0x5C] = Some(LoadRegisterRegister(E, H));
+    a[0x5D] = Some(LoadRegisterRegister(E, L));
+    a[0x5E] = Some(LoadRegisterIndirectHl(E));
+    a[0x5F] = Some(LoadRegisterRegister(E, A));
+    a[0x60] = Some(LoadRegisterRegister(H, B));
+    a[0x61] = Some(LoadRegisterRegister(H, C));
+    a[0x62] = Some(LoadRegisterRegister(H, D));
+    a[0x63] = Some(LoadRegisterRegister(H, E));
+    a[0x64] = Some(LoadRegisterRegister(H, H));
+    a[0x65] = Some(LoadRegisterRegister(H, L));
+    a[0x66] = Some(LoadRegisterIndirectHl(H));
+    a[0x67] = Some(LoadRegisterRegister(H, A));
+    a[0x68] = Some(LoadRegisterRegister(L, B));
+    a[0x69] = Some(LoadRegisterRegister(L, C));
+    a[0x6A] = Some(LoadRegisterRegister(L, D));
+    a[0x6B] = Some(LoadRegisterRegister(L, E));
+    a[0x6C] = Some(LoadRegisterRegister(L, H));
+    a[0x6D] = Some(LoadRegisterRegister(L, L));
+    a[0x6E] = Some(LoadRegisterIndirectHl(L));
+    a[0x6F] = Some(LoadRegisterRegister(L, A));
+    a[0x70] = Some(LoadIndirectHlRegister(B));
+    a[0x71] = Some(LoadIndirectHlRegister(C));
+    a[0x72] = Some(LoadIndirectHlRegister(D));
+    a[0x73] = Some(LoadIndirectHlRegister(E));
+    a[0x74] = Some(LoadIndirectHlRegister(H));
+    a[0x75] = Some(LoadIndirectHlRegister(L));
     
-    a[0x77] = Some(LDHLR(A));
-    a[0x78] = Some(LDRR(A, B));
-    a[0x79] = Some(LDRR(A, C));
-    a[0x7A] = Some(LDRR(A, D));
-    a[0x7B] = Some(LDRR(A, E));
-    a[0x7C] = Some(LDRR(A, H));
-    a[0x7D] = Some(LDRR(A, L));
-    a[0x7E] = Some(LDRHL(A));
-    a[0x7F] = Some(LDRR(A, A));
-    a[0x80] = Some(ADDR(B));
-    a[0x81] = Some(ADDR(C));
-    a[0x82] = Some(ADDR(D));
-    a[0x83] = Some(ADDR(E));
-    a[0x84] = Some(ADDR(H));
-    a[0x85] = Some(ADDR(L));
-    a[0x86] = Some(ADDHL);
-    a[0x87] = Some(ADDR(A));
-    a[0x88] = Some(ADCR(B));
-    a[0x89] = Some(ADCR(C));
-    a[0x8A] = Some(ADCR(D));
-    a[0x8B] = Some(ADCR(E));
-    a[0x8C] = Some(ADCR(H));
-    a[0x8D] = Some(ADCR(L));
-    a[0x8E] = Some(ADCHL);
-    a[0x8F] = Some(ADCR(A));
+    a[0x77] = Some(LoadIndirectHlRegister(A));
+    a[0x78] = Some(LoadRegisterRegister(A, B));
+    a[0x79] = Some(LoadRegisterRegister(A, C));
+    a[0x7A] = Some(LoadRegisterRegister(A, D));
+    a[0x7B] = Some(LoadRegisterRegister(A, E));
+    a[0x7C] = Some(LoadRegisterRegister(A, H));
+    a[0x7D] = Some(LoadRegisterRegister(A, L));
+    a[0x7E] = Some(LoadRegisterIndirectHl(A));
+    a[0x7F] = Some(LoadRegisterRegister(A, A));
+    a[0x80] = Some(AddRegister(B));
+    a[0x81] = Some(AddRegister(C));
+    a[0x82] = Some(AddRegister(D));
+    a[0x83] = Some(AddRegister(E));
+    a[0x84] = Some(AddRegister(H));
+    a[0x85] = Some(AddRegister(L));
+    a[0x86] = Some(AddIndirectHl);
+    a[0x87] = Some(AddRegister(A));
+    a[0x88] = Some(AddCarryRegister(B));
+    a[0x89] = Some(AddCarryRegister(C));
+    a[0x8A] = Some(AddCarryRegister(D));
+    a[0x8B] = Some(AddCarryRegister(E));
+    a[0x8C] = Some(AddCarryRegister(H));
+    a[0x8D] = Some(AddCarryRegister(L));
+    a[0x8E] = Some(AdcIndirectHl);
+    a[0x8F] = Some(AddCarryRegister(A));
 
-    a[0xC2] = Some(JPCCNN(NotZero));
-    a[0xC3] = Some(JPNN);
+    a[0xC2] = Some(JumpConditionalToNn(NotZero));
+    a[0xC3] = Some(JumpToNn);
 
-    a[0xC6] = Some(ADDN);
+    a[0xC6] = Some(AddN);
 
-    a[0xCA] = Some(JPCCNN(Zero));
+    a[0xCA] = Some(JumpConditionalToNn(Zero));
 
-    a[0xCE] = Some(ADCN);
+    a[0xCE] = Some(AddCarryN);
 
-    a[0xD2] = Some(JPCCNN(NotCarry));
+    a[0xD2] = Some(JumpConditionalToNn(NotCarry));
 
-    a[0xDA] = Some(JPCCNN(Carry));
+    a[0xDA] = Some(JumpConditionalToNn(Carry));
 
-    a[0xE0] = Some(LDHNA);
+    a[0xE0] = Some(LoadHalfNA);
 
-    a[0xE2] = Some(LDHCA);
+    a[0xE2] = Some(LoadHalfCA);
     // None
     // None
 
-    a[0xEA] = Some(LDNNA);
+    a[0xEA] = Some(LoadNnA);
 
-    a[0xF0] = Some(LDHAN);
+    a[0xF0] = Some(LoadHalfAN);
 
-    a[0xF2] = Some(LDHAC);
+    a[0xF2] = Some(LoadHalfAC);
 
-    a[0xFA] = Some(LDANN);
+    a[0xFA] = Some(LoadANn);
 
     a
 }

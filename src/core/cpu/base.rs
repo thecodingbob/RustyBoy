@@ -36,91 +36,91 @@ impl CPU {
     fn execute(&mut self, instruction: Instruction) {
         match instruction {
             // 8 bit arithmetic
-            Instruction::ADDR(target) => {
-                self.add_r(target);
+            Instruction::AddRegister(target) => {
+                self.add_register(target);
             },
-            Instruction::ADDHL => {
-                self.add_hl();
-            },
-            Instruction::ADDN => {
+            Instruction::AddIndirectHl => {
+                self.add_indirect_hl();
+            }
+            Instruction::AddN => {
                 self.add_n();
             }
-            Instruction::ADCR(target) => {
-                self.adc_r(target);
+            Instruction::AddCarryRegister(target) => {
+                self.add_carry_register(target);
             },
-            Instruction::ADCHL =>{
-                self.adc_hl();
-            },
-            Instruction::ADCN => {
-                self.adc_n();
+            Instruction::AdcIndirectHl =>{
+                self.add_carry_indirect_hl();
+            }
+            Instruction::AddCarryN => {
+                self.add_carry_n();
             }
             // 8 bit load
-            Instruction::LDRR(source, receiver) => {
-                self.ld_r_r(source, receiver);
+            Instruction::LoadRegisterRegister(source, receiver) => {
+                self.load_register_register(source, receiver);
             },
-            Instruction::LDRN(receiver) => {
-                self.ld_r_n(receiver);
+            Instruction::LoadRegisterN(receiver) => {
+                self.load_register_n(receiver);
             },
-            Instruction::LDRHL(receiver) => {
-                self.ld_r_hl(receiver);
+            Instruction::LoadRegisterIndirectHl(receiver) => {
+                self.load_register_indirect_hl(receiver);
             },
-            Instruction::LDHLR(source) => {
-                self.ld_hl_r(source);
+            Instruction::LoadIndirectHlRegister(source) => {
+                self.load_indirect_hl_register(source);
             },
-            Instruction::LDHLN => {
-                self.ld_hl_n();
-            },
-            Instruction::LDABC => {
-                self.ld_a_bc();
-            },
-            Instruction::LDADE => {
-                self.ld_a_de();
-            },
-            Instruction::LDBCA => {
-                self.ld_bc_a();
-            },
-            Instruction::LDDEA => {
-                self.ld_de_a();
-            },
-            Instruction::LDANN => {
-                self.ld_a_nn();
-            },
-            Instruction::LDNNA => {
-                self.ld_nn_a();
-            },
-            Instruction::LDHAC => {
-                self.ld_h_a_c();
-            },
-            Instruction::LDHCA => {
-                self.ld_h_c_a();
-            },
-            Instruction::LDHAN => {
-                self.ld_h_a_n();
+            Instruction::LoadIndirectHlN => {
+                self.load_indirect_hl_n();
             }
-            Instruction::LDHNA => {
-                self.ld_h_n_a();
-            },
-            Instruction::LDAHLDEC => {
-                self.ld_a_hl_dec();
-            },
-            Instruction::LDHLDECA => {
-                self.ld_hl_dec_a();
-            },
-            Instruction::LDAHLINC => {
-                self.ld_a_hl_inc();
-            },
-            Instruction::LDHLINCA => {
-                self.ld_hl_inc_a();
-            },
-            Instruction::LDRRNN(target) => {
-                self.ld_rr_nn(target);
+            Instruction::LoadAIndirectBc => {
+                self.load_a_bc();
+            }
+            Instruction::LoadAIndirectDe => {
+                self.load_a_de();
+            }
+            Instruction::LoadIndirectBcA => {
+                self.load_bc_a();
+            }
+            Instruction::LoadIndirectDeA => {
+                self.load_de_a();
+            }
+            Instruction::LoadANn => {
+                self.load_a_nn();
+            }
+            Instruction::LoadNnA => {
+                self.load_nn_a();
+            }
+            Instruction::LoadHalfAC => {
+                self.load_half_a_c();
+            }
+            Instruction::LoadHalfCA => {
+                self.load_half_c_a();
+            }
+            Instruction::LoadHalfAN => {
+                self.load_half_a_n();
+            }
+            Instruction::LoadHalfNA => {
+                self.load_half_n_a();
+            }
+            Instruction::LoadAIndirectHlDecrement => {
+                self.load_a_indirect_hl_decrement();
+            }
+            Instruction::LoadIndirectHlDecrementA => {
+                self.load_indirect_hl_decrement_a();
+            }
+            Instruction::LoadAIndirectHlIncrement => {
+                self.load_a_indirect_hl_increment();
+            }
+            Instruction::LoadIndirectHlIncrementA => {
+                self.load_indirect_hl_increment_a();
+            }
+            Instruction::LoadRegister16Nn(target) => {
+                self.load_register16_nn(target);
             }
             // jump instructions
-            Instruction::JPNN => {
-                self.jp_nn();
+            Instruction::JumpToNn => {
+                self.jump_to_nn();
             }
-            Instruction::JPCCNN(jump_condition) => {
-                self.jp_cc_nn(jump_condition);
+            Instruction::JumpConditionalToNn(jump_condition) => {
+                self.jump_conditional_to_nn(jump_condition);
             }
         }
     }
@@ -144,7 +144,7 @@ mod test{
         let mut cpu = CPU::new();
         cpu.registers.a = 0x1;
 
-        cpu.execute(Instruction::ADDR(RegisterTarget::A));
+        cpu.execute(Instruction::AddRegister(RegisterTarget::A));
 
         assert_eq!(0x2, cpu.registers.a);
     }

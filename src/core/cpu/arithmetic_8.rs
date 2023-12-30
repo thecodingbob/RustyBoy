@@ -3,11 +3,11 @@ use crate::core::instructions::definitions::RegisterTarget;
 
 impl CPU{
     // Matching actual instructions /////////////////////
-    pub (super) fn add_r(&mut self, target: RegisterTarget) {
+    pub (super) fn add_register(&mut self, target: RegisterTarget) {
         let value = self.get_register_value(target);
         self.add_constant(value);
     }
-    pub (super) fn add_hl(&mut self) {
+    pub (super) fn add_indirect_hl(&mut self) {
         let address = self.registers.get_hl();
         let value = self.bus.read_byte(address);
         self.add_constant(value);
@@ -16,16 +16,16 @@ impl CPU{
         let value = self.read_and_increment_pc();
         self.add_constant(value);
     }
-    pub (super) fn adc_r(&mut self, target: RegisterTarget){
+    pub (super) fn add_carry_register(&mut self, target: RegisterTarget){
         let value = self.get_register_value(target);
         self.add_constant_carry(value);
     }
-    pub (super) fn adc_hl(&mut self) {
+    pub (super) fn add_carry_indirect_hl(&mut self) {
         let address = self.registers.get_hl();
         let value = self.bus.read_byte(address);
         self.add_constant_carry(value);
     }
-    pub (super) fn adc_n(&mut self) {
+    pub (super) fn add_carry_n(&mut self) {
         let value = self.read_and_increment_pc();
         self.add_constant_carry(value);
     }
@@ -151,15 +151,15 @@ mod test{
         cpu.registers.c = 0x10;
         cpu.registers.h = 0x3;
 
-        cpu.add_r(RegisterTarget::C);
+        cpu.add_register(RegisterTarget::C);
 
         assert_eq!(0x10, cpu.registers.a);
 
-        cpu.add_r(RegisterTarget::H);
+        cpu.add_register(RegisterTarget::H);
 
         assert_eq!(0x13, cpu.registers.a);
 
-        cpu.add_r(RegisterTarget::A);
+        cpu.add_register(RegisterTarget::A);
 
         assert_eq!(0x26, cpu.registers.a);
     }
@@ -170,7 +170,7 @@ mod test{
         cpu.registers.f.carry = true;
         cpu.registers.e = 0x13;
 
-        cpu.adc_r(RegisterTarget::E);
+        cpu.add_carry_register(RegisterTarget::E);
 
         assert_eq!(0x14, cpu.registers.a);
         assert_eq!(FlagRegister::from(0b0), cpu.registers.f);
@@ -187,7 +187,7 @@ mod test{
         cpu.bus.write_byte(hl_address, value);
         cpu.registers.a = a_value;
 
-        cpu.add_hl();
+        cpu.add_indirect_hl();
 
         assert_eq!(0x1, cpu.registers.a);
         assert_eq!(FlagRegister{
@@ -205,7 +205,7 @@ mod test{
         cpu.registers.b = 0x2;
         cpu.registers.f.carry = true;
 
-        cpu.adc_r(RegisterTarget::B);
+        cpu.add_carry_register(RegisterTarget::B);
 
         assert_eq!(0x3, cpu.registers.a);
         assert_eq!(FlagRegister::from(0b0), cpu.registers.f);
@@ -220,7 +220,7 @@ mod test{
         cpu.bus.write_byte(hl_address, value);
         cpu.registers.a = a_value;
 
-        cpu.adc_hl();
+        cpu.add_carry_indirect_hl();
 
         assert_eq!(0x1, cpu.registers.a);
         assert_eq!(FlagRegister{
@@ -238,7 +238,7 @@ mod test{
         cpu.bus.write_byte(0x0, 0x10);
         cpu.registers.f.carry = true;
 
-        cpu.adc_n();
+        cpu.add_carry_n();
 
         assert_eq!(0x11, cpu.registers.a);
         assert_eq!(FlagRegister::from(0b0), cpu.registers.f);

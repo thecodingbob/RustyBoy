@@ -3,92 +3,92 @@ use crate::core::instructions::definitions::RegisterTarget;
 use crate::util::join_u8;
 
 impl CPU{
-    pub (super) fn ld_r_r(&mut self, source: RegisterTarget, receiver: RegisterTarget) {
+    pub (super) fn load_register_register(&mut self, source: RegisterTarget, receiver: RegisterTarget) {
         let value = self.get_register_value(source);
         self.set_register_value(receiver, value);
     }
-    pub (super) fn ld_r_n(&mut self, target: RegisterTarget) {
+    pub (super) fn load_register_n(&mut self, target: RegisterTarget) {
         let n = self.read_and_increment_pc();
         self.set_register_value(target, n);
     }
-    pub (super) fn ld_r_hl(&mut self, target: RegisterTarget) {
+    pub (super) fn load_register_indirect_hl(&mut self, target: RegisterTarget) {
         let address = self.registers.get_hl();
         let value = self.bus.read_byte(address);
         self.set_register_value(target, value);
     }
-    pub (super) fn ld_hl_r(&mut self, source: RegisterTarget) {
+    pub (super) fn load_indirect_hl_register(&mut self, source: RegisterTarget) {
         let value = self.get_register_value(source);
         let address = self.registers.get_hl();
         self.bus.write_byte(address, value);
     }
 
-    pub (super) fn ld_hl_n(&mut self) {
+    pub (super) fn load_indirect_hl_n(&mut self) {
         let address = self.registers.get_hl();
         let n = self.read_and_increment_pc();
         self.bus.write_byte(address, n);
     }
 
-    pub (super) fn ld_a_bc(&mut self) {
+    pub (super) fn load_a_bc(&mut self) {
         let address = self.registers.get_bc();
         let value = self.bus.read_byte(address);
         self.registers.a = value;
     }
 
-    pub (super) fn ld_a_de(&mut self) {
+    pub (super) fn load_a_de(&mut self) {
         let address = self.registers.get_de();
         let value = self.bus.read_byte(address);
         self.registers.a = value;
     }
 
-    pub (super) fn ld_bc_a(&mut self) {
+    pub (super) fn load_bc_a(&mut self) {
         let address = self.registers.get_bc();
         let value = self.registers.a;
         self.bus.write_byte(address, value);
     }
 
-    pub (super) fn ld_de_a(&mut self){
+    pub (super) fn load_de_a(&mut self){
         let address = self.registers.get_de();
         let value = self.registers.a;
         self.bus.write_byte(address, value);
     }
 
-    pub (super) fn ld_a_nn(&mut self){
+    pub (super) fn load_a_nn(&mut self){
         let address = self.read_address_and_increment_pc();
         let value = self.bus.read_byte(address);
         self.registers.a = value;
     }
 
-    pub (super) fn ld_nn_a(&mut self){
+    pub (super) fn load_nn_a(&mut self){
         let value = self.registers.a;
         let address = self.read_address_and_increment_pc();
         self.bus.write_byte(address, value);
     }
 
-    pub (super) fn ld_h_a_c(&mut self){
+    pub (super) fn load_half_a_c(&mut self){
         let address = get_absolute_address_from_lsb(self.registers.c);
         let value = self.bus.read_byte(address);
         self.registers.a = value;
     }
 
-    pub (super) fn ld_h_c_a(&mut self){
+    pub (super) fn load_half_c_a(&mut self){
         let address = get_absolute_address_from_lsb(self.registers.c);
         let value = self.registers.a;
         self.bus.write_byte(address, value);
     }
 
-    pub (super) fn ld_h_a_n(&mut self){
+    pub (super) fn load_half_a_n(&mut self){
         let lsb_address = self.read_and_increment_pc();
         let value = self.bus.read_byte(get_absolute_address_from_lsb(lsb_address));
         self.registers.a = value;
     }
 
-    pub (super) fn ld_h_n_a(&mut self){
+    pub (super) fn load_half_n_a(&mut self){
         let lsb_address = self.read_and_increment_pc();
         let value = self.registers.a;
         self.bus.write_byte(get_absolute_address_from_lsb(lsb_address), value);
     }
 
-    pub (super) fn ld_a_hl_dec(&mut self){
+    pub (super) fn load_a_indirect_hl_decrement(&mut self){
         let address = self.registers.get_hl();
         let value = self.bus.read_byte(address);
 
@@ -96,7 +96,7 @@ impl CPU{
         self.registers.set_hl(address.wrapping_sub(1));
     }
 
-    pub (super) fn ld_hl_dec_a(&mut self){
+    pub (super) fn load_indirect_hl_decrement_a(&mut self){
         let address = self.registers.get_hl();
         let value = self.registers.a;
 
@@ -104,7 +104,7 @@ impl CPU{
         self.registers.set_hl(address.wrapping_sub(1));
     }
 
-    pub (super) fn ld_a_hl_inc(&mut self){
+    pub (super) fn load_a_indirect_hl_increment(&mut self){
         let address = self.registers.get_hl();
         let value = self.bus.read_byte(address);
 
@@ -112,7 +112,7 @@ impl CPU{
         self.registers.set_hl(address.wrapping_add(1));
     }
 
-    pub (super) fn ld_hl_inc_a(&mut self){
+    pub (super) fn load_indirect_hl_increment_a(&mut self){
         let address = self.registers.get_hl();
         let value = self.registers.a;
 
@@ -147,7 +147,7 @@ mod test{
         cpu.registers.set_hl(hl_address);
         cpu.registers.a = val;
 
-        cpu.ld_hl_inc_a();
+        cpu.load_indirect_hl_increment_a();
 
         assert_eq!(hl_address.wrapping_add(1), cpu.registers.get_hl());
         assert_eq!(val, cpu.bus.read_byte(hl_address));
@@ -159,7 +159,7 @@ mod test{
         let hl_address = u16::MAX;
         cpu.registers.set_hl(hl_address);
 
-        cpu.ld_a_hl_inc();
+        cpu.load_a_indirect_hl_increment();
 
         let expected_value = cpu.bus.read_byte(hl_address);
 
@@ -175,7 +175,7 @@ mod test{
         cpu.registers.set_hl(hl_address);
         cpu.registers.a = val;
 
-        cpu.ld_hl_dec_a();
+        cpu.load_indirect_hl_decrement_a();
 
         assert_eq!(hl_address.wrapping_sub(1), cpu.registers.get_hl());
         assert_eq!(val, cpu.bus.read_byte(hl_address));
@@ -187,7 +187,7 @@ mod test{
         let hl_address = 0;
         cpu.registers.set_hl(hl_address);
 
-        cpu.ld_a_hl_dec();
+        cpu.load_a_indirect_hl_decrement();
 
         let expected_value = cpu.bus.read_byte(hl_address);
 
@@ -205,7 +205,7 @@ mod test{
         cpu.program_counter = pc_address;
         cpu.bus.write_byte(pc_address, lsb_address);
 
-        cpu.ld_h_n_a();
+        cpu.load_half_n_a();
 
         assert_eq!(val, cpu.bus.read_byte(0xFF30));
         assert_eq!(pc_address.wrapping_add(1), cpu.program_counter);
@@ -217,7 +217,7 @@ mod test{
         let n_address = 0x12;
         let full_address = join_u8(0xFF, n_address);
 
-        cpu.ld_h_a_n();
+        cpu.load_half_a_n();
 
         let expected_value = cpu.bus.read_byte(full_address);
 
@@ -232,7 +232,7 @@ mod test{
         cpu.registers.c = lsb_address;
         cpu.registers.a = val;
 
-        cpu.ld_h_c_a();
+        cpu.load_half_c_a();
 
         assert_eq!(val, cpu.bus.read_byte(0xFF30));
         assert_eq!(0x0, cpu.program_counter);
@@ -245,7 +245,7 @@ mod test{
         cpu.registers.c = c_address;
         let full_address = join_u8(0xFF, c_address);
 
-        cpu.ld_h_a_c();
+        cpu.load_half_a_c();
 
         let expected_value = cpu.bus.read_byte(full_address);
 
@@ -257,7 +257,7 @@ mod test{
         let mut cpu = CPU::new();
         let address = 0x12;
 
-        cpu.ld_a_nn();
+        cpu.load_a_nn();
 
         let expected_value = cpu.bus.read_byte(address);
 
@@ -275,7 +275,7 @@ mod test{
         cpu.bus.write_byte(lsb_address_pointer, 0x78);
         cpu.bus.write_byte(lsb_address_pointer.wrapping_add(1), 0x56);
 
-        cpu.ld_nn_a();
+        cpu.load_nn_a();
 
         assert_eq!(val, cpu.bus.read_byte(target_address));
         assert_eq!(lsb_address_pointer.wrapping_add(2), cpu.program_counter);
@@ -289,7 +289,7 @@ mod test{
         cpu.registers.a = val;
         cpu.registers.set_bc(target_address);
 
-        cpu.ld_bc_a();
+        cpu.load_bc_a();
 
         assert_eq!(val, cpu.bus.read_byte(target_address));
     }
@@ -302,7 +302,7 @@ mod test{
         cpu.registers.a = val;
         cpu.registers.set_de(target_address);
 
-        cpu.ld_de_a();
+        cpu.load_de_a();
 
         assert_eq!(val, cpu.bus.read_byte(target_address));
     }
@@ -311,7 +311,7 @@ mod test{
     fn test_ld_a_de(){
         let mut cpu = CPU::new();
 
-        cpu.ld_a_de();
+        cpu.load_a_de();
 
         let address = cpu.registers.get_de();
         let expected_value = cpu.bus.read_byte(address);
@@ -323,7 +323,7 @@ mod test{
     fn test_ld_a_bc(){
         let mut cpu = CPU::new();
 
-        cpu.ld_a_bc();
+        cpu.load_a_bc();
 
         let address = cpu.registers.get_bc();
         let expected_value = cpu.bus.read_byte(address);
@@ -341,7 +341,7 @@ mod test{
         cpu.program_counter = pc_address;
         cpu.registers.set_hl(hl_address);
 
-        cpu.ld_hl_n();
+        cpu.load_indirect_hl_n();
 
         assert_eq!(pc_address.wrapping_add(1), cpu.program_counter);
         assert_eq!(n, cpu.bus.read_byte(hl_address));
@@ -356,7 +356,7 @@ mod test{
             cpu.bus.write_byte(address, value);
             cpu.registers.set_hl(address);
 
-            cpu.ld_r_hl(receiver);
+            cpu.load_register_indirect_hl(receiver);
 
             assert_eq!(value, cpu.get_register_value(receiver));
         }
@@ -375,7 +375,7 @@ mod test{
             cpu.set_register_value(source, value);
             cpu.registers.set_hl(address);
 
-            cpu.ld_hl_r(source);
+            cpu.load_indirect_hl_register(source);
 
             assert_eq!(value, cpu.bus.read_byte(address));
         }
@@ -390,7 +390,7 @@ mod test{
             cpu.program_counter = pc;
             cpu.bus.write_byte(pc, value);
 
-            cpu.ld_r_n(receiver);
+            cpu.load_register_n(receiver);
 
             assert_eq!(value, cpu.get_register_value(receiver));
             assert_eq!(pc.wrapping_add(1), cpu.program_counter);
@@ -404,7 +404,7 @@ mod test{
                 let mut cpu = CPU::new();
                 *cpu.get_register_pointer(source) = 0x1;
 
-                cpu.ld_r_r(source, receiver);
+                cpu.load_register_register(source, receiver);
 
                 let source_value = cpu.get_register_value(source);
                 let receiver_value = cpu.get_register_value(receiver);

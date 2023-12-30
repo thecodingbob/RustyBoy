@@ -3,7 +3,7 @@ use crate::core::instructions::definitions::JumpCondition;
 use crate::util::join_u8;
 
 impl CPU{
-    pub (super) fn jp_cc_nn(&mut self, jump_condition: JumpCondition){
+    pub (super) fn jump_conditional_to_nn(&mut self, jump_condition: JumpCondition){
         let should_jump = match jump_condition {
             JumpCondition::NotZero => !self.registers.f.zero,
             JumpCondition::Zero => self.registers.f.zero,
@@ -13,7 +13,7 @@ impl CPU{
         self.jump(should_jump)
     }
 
-    pub (super) fn jp_nn(&mut self) {
+    pub (super) fn jump_to_nn(&mut self) {
         self.jump(true);
     }
 
@@ -48,14 +48,14 @@ mod test{
         cpu.bus.write_byte(0x1235, 0x78);
         cpu.registers.f.zero = false;
 
-        cpu.jp_cc_nn(NotZero);
+        cpu.jump_conditional_to_nn(NotZero);
 
         assert_eq!(0x7856, cpu.program_counter);
 
 
         cpu.registers.f.zero = true;
 
-        cpu.jp_cc_nn(NotZero);
+        cpu.jump_conditional_to_nn(NotZero);
 
         assert_eq!(0x7858, cpu.program_counter);
     }
@@ -68,14 +68,14 @@ mod test{
         cpu.bus.write_byte(0x1235, 0x78);
         cpu.registers.f.zero = true;
 
-        cpu.jp_cc_nn(Zero);
+        cpu.jump_conditional_to_nn(Zero);
 
         assert_eq!(0x7856, cpu.program_counter);
 
 
         cpu.registers.f.zero = false;
 
-        cpu.jp_cc_nn(Zero);
+        cpu.jump_conditional_to_nn(Zero);
 
         assert_eq!(0x7858, cpu.program_counter);
     }
@@ -88,14 +88,14 @@ mod test{
         cpu.bus.write_byte(0x1235, 0x78);
         cpu.registers.f.carry = true;
 
-        cpu.jp_cc_nn(Carry);
+        cpu.jump_conditional_to_nn(Carry);
 
         assert_eq!(0x7856, cpu.program_counter);
 
 
         cpu.registers.f.carry = false;
 
-        cpu.jp_cc_nn(Carry);
+        cpu.jump_conditional_to_nn(Carry);
 
         assert_eq!(0x7858, cpu.program_counter);
     }
@@ -108,14 +108,14 @@ mod test{
         cpu.bus.write_byte(0x1235, 0x78);
         cpu.registers.f.carry = false;
 
-        cpu.jp_cc_nn(NotCarry);
+        cpu.jump_conditional_to_nn(NotCarry);
 
         assert_eq!(0x7856, cpu.program_counter);
 
 
         cpu.registers.f.carry = true;
 
-        cpu.jp_cc_nn(NotCarry);
+        cpu.jump_conditional_to_nn(NotCarry);
 
         assert_eq!(0x7858, cpu.program_counter);
     }
@@ -128,7 +128,7 @@ mod test{
         cpu.bus.write_byte(0x1235, 0x78);
         cpu.registers.f.carry = true;
 
-        cpu.jp_nn();
+        cpu.jump_to_nn();
 
         assert_eq!(0x7856, cpu.program_counter);
     }

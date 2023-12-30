@@ -3,7 +3,7 @@ use crate::core::instructions::definitions::RegisterTarget16;
 use crate::util::join_u8;
 
 impl CPU {
-    pub(super) fn ld_rr_nn(&mut self, target: RegisterTarget16) {
+    pub(super) fn load_register16_nn(&mut self, target: RegisterTarget16) {
         let lsb_nn = self.read_and_increment_pc();
         let msb_nn = self.read_and_increment_pc();
         self.set_register_value_16(target, join_u8(msb_nn, lsb_nn));
@@ -29,7 +29,7 @@ mod test{
             cpu.bus.write_byte(pc, lsb_value);
             cpu.bus.write_byte(pc.wrapping_add(1), msb_value);
 
-            cpu.ld_rr_nn(receiver);
+            cpu.load_register16_nn(receiver);
 
             assert_eq!(value, cpu.get_register_value_16(receiver));
             assert_eq!(pc.wrapping_add(2), cpu.program_counter);
