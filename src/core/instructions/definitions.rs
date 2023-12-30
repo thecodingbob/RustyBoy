@@ -59,6 +59,8 @@ pub(crate) enum Instruction {
     LoadNnFromStackPointer,
     // Load to the 16-bit SP register, data from the 16-bit HL register.
     LoadStackPointerFromHl,
+    // Push to the stack memory, data from the 16-bit register rr.
+    PushFromRegister(RegisterTarget16),
     // Unconditional jump to the nn address (indirect pc)
     JumpToNn,
     // Jumps to the nn address (indirect pc) if the JumpCondition is satisfied

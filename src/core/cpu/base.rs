@@ -120,6 +120,9 @@ impl CPU {
             },
             Instruction::LoadStackPointerFromHl => {
                 self.load_stack_pointer_from_hl();
+            },
+            Instruction::PushFromRegister(source) => {
+                self.push_from_register(source);
             }
             // jump instructions
             Instruction::JumpToNn => {

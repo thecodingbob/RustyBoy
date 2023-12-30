@@ -147,6 +147,7 @@ const fn init_instruction_array() -> [Option<Instruction>; 256] {
     a[0xC2] = Some(JumpConditionalToNn(NotZero));
     a[0xC3] = Some(JumpToNn);
 
+    a[0xC5] = Some(PushFromRegister(BC));
     a[0xC6] = Some(AddN);
 
     a[0xCA] = Some(JumpConditionalToNn(Zero));
@@ -157,11 +158,15 @@ const fn init_instruction_array() -> [Option<Instruction>; 256] {
 
     a[0xDA] = Some(JumpConditionalToNn(Carry));
 
+    a[0xD5] = Some(PushFromRegister(DE));
+
     a[0xE0] = Some(LoadHalfNA);
 
     a[0xE2] = Some(LoadHalfCA);
     // None
     // None
+
+    a[0xE5] = Some(PushFromRegister(HL));
 
     a[0xEA] = Some(LoadNnA);
 
