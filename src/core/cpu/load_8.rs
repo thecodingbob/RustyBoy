@@ -8,7 +8,7 @@ impl CPU{
         self.set_register_value(receiver, value);
     }
     pub (super) fn load_register_n(&mut self, target: RegisterTarget) {
-        let n = self.read_and_increment_pc();
+        let n = self.read_byte_and_increment_pc();
         self.set_register_value(target, n);
     }
     pub (super) fn load_register_indirect_hl(&mut self, target: RegisterTarget) {
@@ -24,7 +24,7 @@ impl CPU{
 
     pub (super) fn load_indirect_hl_n(&mut self) {
         let address = self.registers.get_hl();
-        let n = self.read_and_increment_pc();
+        let n = self.read_byte_and_increment_pc();
         self.bus.write_byte(address, n);
     }
 
@@ -53,14 +53,14 @@ impl CPU{
     }
 
     pub (super) fn load_a_nn(&mut self){
-        let address = self.read_address_and_increment_pc();
+        let address = self.read_word_and_increment_pc();
         let value = self.bus.read_byte(address);
         self.registers.a = value;
     }
 
     pub (super) fn load_nn_a(&mut self){
         let value = self.registers.a;
-        let address = self.read_address_and_increment_pc();
+        let address = self.read_word_and_increment_pc();
         self.bus.write_byte(address, value);
     }
 
@@ -77,13 +77,13 @@ impl CPU{
     }
 
     pub (super) fn load_half_a_n(&mut self){
-        let lsb_address = self.read_and_increment_pc();
+        let lsb_address = self.read_byte_and_increment_pc();
         let value = self.bus.read_byte(get_absolute_address_from_lsb(lsb_address));
         self.registers.a = value;
     }
 
     pub (super) fn load_half_n_a(&mut self){
-        let lsb_address = self.read_and_increment_pc();
+        let lsb_address = self.read_byte_and_increment_pc();
         let value = self.registers.a;
         self.bus.write_byte(get_absolute_address_from_lsb(lsb_address), value);
     }

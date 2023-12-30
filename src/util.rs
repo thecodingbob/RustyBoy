@@ -25,6 +25,9 @@ pub fn join_u8(most_significant: u8, least_significant: u8) -> u16 {
     (most_significant as u16) << 8 | least_significant as u16
 }
 
+
+
+/// Returns (msb, lsb)
 pub fn split_u16(value: u16) -> (u8, u8){
     (
         ((value & 0xFF00) >> 8) as u8,

@@ -20,10 +20,10 @@ impl CPU {
     }
 
     fn step(&mut self){
-        let mut instruction_byte = self.read_and_increment_pc();
+        let mut instruction_byte = self.read_byte_and_increment_pc();
         let is_prefixed = instruction_byte == 0xCB;
         if is_prefixed {
-            instruction_byte = self.read_and_increment_pc();
+            instruction_byte = self.read_byte_and_increment_pc();
         }
         if let Some(instruction) = Instruction::from_byte(instruction_byte, is_prefixed){
             self.execute(instruction);
@@ -114,6 +114,9 @@ impl CPU {
             }
             Instruction::LoadRegister16Nn(target) => {
                 self.load_register16_nn(target);
+            },
+            Instruction::LoadNnFromStackPointer => {
+                self.load_nn_from_stack_pointer();
             }
             // jump instructions
             Instruction::JumpToNn => {

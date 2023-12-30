@@ -13,7 +13,7 @@ impl CPU{
         self.add_constant(value);
     }
     pub (super) fn add_n(&mut self) {
-        let value = self.read_and_increment_pc();
+        let value = self.read_byte_and_increment_pc();
         self.add_constant(value);
     }
     pub (super) fn add_carry_register(&mut self, target: RegisterTarget){
@@ -26,7 +26,7 @@ impl CPU{
         self.add_constant_carry(value);
     }
     pub (super) fn add_carry_n(&mut self) {
-        let value = self.read_and_increment_pc();
+        let value = self.read_byte_and_increment_pc();
         self.add_constant_carry(value);
     }
 

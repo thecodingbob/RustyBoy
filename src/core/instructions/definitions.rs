@@ -55,6 +55,8 @@ pub(crate) enum Instruction {
     LoadIndirectHlIncrementA,
     // Loads the immediate 16 bit data NN into the 16 bit register RR
     LoadRegister16Nn(RegisterTarget16),
+    // Load to the absolute address specified by the 16-bit operand nn, data from the 16-bit SP register.
+    LoadNnFromStackPointer,
     // Unconditional jump to the nn address (indirect pc)
     JumpToNn,
     // Jumps to the nn address (indirect pc) if the JumpCondition is satisfied

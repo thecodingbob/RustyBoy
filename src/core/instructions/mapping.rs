@@ -30,7 +30,9 @@ const fn init_instruction_array() -> [Option<Instruction>; 256] {
     a[0x02] = Some(LoadIndirectBcA);
     
     a[0x06] = Some(LoadRegisterN(B));
-    
+
+    a[0x08] = Some(LoadNnFromStackPointer);
+
     a[0x0A] = Some(LoadAIndirectBc);
     
     a[0x0E] = Some(LoadRegisterN(C));

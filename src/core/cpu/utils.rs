@@ -3,15 +3,15 @@ use crate::core::instructions::definitions::{RegisterTarget, RegisterTarget16};
 use crate::util::join_u8;
 
 impl CPU{
-    pub (super) fn read_and_increment_pc(&mut self) -> u8 {
+    pub (super) fn read_byte_and_increment_pc(&mut self) -> u8 {
         let address = self.program_counter;
         self.program_counter = address.wrapping_add(1);
         self.bus.read_byte(address)
     }
 
-    pub (super) fn read_address_and_increment_pc(&mut self) -> u16 {
-        let lsb_address = self.read_and_increment_pc();
-        let msb_address = self.read_and_increment_pc();
+    pub (super) fn read_word_and_increment_pc(&mut self) -> u16 {
+        let lsb_address = self.read_byte_and_increment_pc();
+        let msb_address = self.read_byte_and_increment_pc();
         join_u8(msb_address, lsb_address)
     }
 
@@ -83,7 +83,7 @@ mod test{
         cpu.program_counter = address;
         cpu.bus.write_byte(address, value);
 
-        let pc_read_value = cpu.read_and_increment_pc();
+        let pc_read_value = cpu.read_byte_and_increment_pc();
 
         assert_eq!(value, pc_read_value);
         assert_eq!(0x0, cpu.program_counter);
@@ -101,7 +101,7 @@ mod test{
         cpu.bus.write_byte(lsb_stored_address, lsb_target_address);
         cpu.bus.write_byte(msb_stored_address, msb_target_address);
 
-        let result = cpu.read_address_and_increment_pc();
+        let result = cpu.read_word_and_increment_pc();
 
         println!("{:x}", result);
         println!("{:x}", join_u8(msb_target_address, lsb_target_address));
