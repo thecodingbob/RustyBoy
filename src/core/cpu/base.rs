@@ -117,6 +117,9 @@ impl CPU {
             },
             Instruction::LoadNnFromStackPointer => {
                 self.load_nn_from_stack_pointer();
+            },
+            Instruction::LoadStackPointerFromHl => {
+                self.load_stack_pointer_from_hl();
             }
             // jump instructions
             Instruction::JumpToNn => {

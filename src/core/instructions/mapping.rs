@@ -171,6 +171,8 @@ const fn init_instruction_array() -> [Option<Instruction>; 256] {
 
     a[0xFA] = Some(LoadANn);
 
+    a[0xF9] = Some(LoadStackPointerFromHl);
+
     a
 }
 

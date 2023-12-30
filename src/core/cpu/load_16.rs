@@ -14,6 +14,11 @@ impl CPU {
         self.bus.write_byte(nn_address, lsb_stack_pointer);
         self.bus.write_byte(nn_address.wrapping_add(1), msb_stack_pointer);
     }
+
+    pub(super) fn load_stack_pointer_from_hl(&mut self){
+        let hl_value = self.registers.get_hl();
+        self.stack_pointer = hl_value;
+    }
 }
 
 
@@ -61,5 +66,16 @@ mod test{
         assert_eq!(nn_address.wrapping_add(2), cpu.program_counter);
         assert_eq!(lsb_sp, cpu.bus.read_byte(nn));
         assert_eq!(msb_sp, cpu.bus.read_byte(nn.wrapping_add(1)));
+    }
+
+    #[test]
+    fn test_load_stack_pointer_from_hl(){
+        let mut cpu = CPU::new();
+        let value = u16::random();
+        cpu.registers.set_hl(value);
+
+        cpu.load_stack_pointer_from_hl();
+
+        assert_eq!(value, cpu.stack_pointer);
     }
 }
