@@ -54,7 +54,8 @@ const fn init_instruction_array() -> [Option<Instruction>; 256] {
     a[0x2A] = Some(LoadAIndirectHlIncrement);
     
     a[0x2E] = Some(LoadRegisterN(L));
-    
+
+    a[0x31] = Some(LoadRegister16Nn(SP));
     a[0x32] = Some(LoadIndirectHlDecrementA);
     
     a[0x36] = Some(LoadIndirectHlN);
@@ -175,6 +176,8 @@ const fn init_instruction_array() -> [Option<Instruction>; 256] {
     a[0xF2] = Some(LoadHalfAC);
 
     a[0xFA] = Some(LoadANn);
+
+    a[0xF5] = Some(PushFromRegister(PushPopTarget::AF));
 
     a[0xF9] = Some(LoadStackPointerFromHl);
 
