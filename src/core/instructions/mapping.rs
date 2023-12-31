@@ -145,6 +145,7 @@ const fn init_instruction_array() -> [Option<Instruction>; 256] {
     a[0x8E] = Some(AdcIndirectHl);
     a[0x8F] = Some(AddCarryRegister(A));
 
+    a[0xC1] = Some(PopIntoRegister(PushPopTarget::BC));
     a[0xC2] = Some(JumpConditionalToNn(NotZero));
     a[0xC3] = Some(JumpToNn);
 
@@ -155,6 +156,7 @@ const fn init_instruction_array() -> [Option<Instruction>; 256] {
 
     a[0xCE] = Some(AddCarryN);
 
+    a[0xD1] = Some(PopIntoRegister(PushPopTarget::DE));
     a[0xD2] = Some(JumpConditionalToNn(NotCarry));
 
     a[0xDA] = Some(JumpConditionalToNn(Carry));
@@ -163,6 +165,7 @@ const fn init_instruction_array() -> [Option<Instruction>; 256] {
 
     a[0xE0] = Some(LoadHalfNA);
 
+    a[0xE1] = Some(PopIntoRegister(PushPopTarget::HL));
     a[0xE2] = Some(LoadHalfCA);
     // None
     // None
@@ -173,6 +176,7 @@ const fn init_instruction_array() -> [Option<Instruction>; 256] {
 
     a[0xF0] = Some(LoadHalfAN);
 
+    a[0xF1] = Some(PopIntoRegister(PushPopTarget::AF));
     a[0xF2] = Some(LoadHalfAC);
 
     a[0xFA] = Some(LoadANn);

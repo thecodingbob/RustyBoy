@@ -123,6 +123,9 @@ impl CPU {
             },
             Instruction::PushFromRegister(source) => {
                 self.push_from_register(source);
+            },
+            Instruction::PopIntoRegister(target) => {
+                self.pop_into_register(target);
             }
             // jump instructions
             Instruction::JumpToNn => {
@@ -143,7 +146,7 @@ mod test{
 
     #[test]
     fn test_step(){
-        let mut cpu = CPU::new();
+        let cpu = CPU::new();
 
         //cpu.step();
     }

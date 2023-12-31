@@ -25,6 +25,13 @@ impl CPU {
         self.stack_pointer = new_stack_pointer;
     }
 
+    pub(super) fn pop_into_register(&mut self, target: PushPopTarget) {
+        let stack_pointer = self.stack_pointer;
+        let value = self.bus.read_word(stack_pointer);
+        self.set_push_pop_target_value(target, value);
+        self.stack_pointer = stack_pointer.wrapping_add(2);
+    }
+
 }
 
 
@@ -97,6 +104,25 @@ mod test{
 
             assert_eq!(value, cpu.bus.read_word(cpu.stack_pointer));
             assert_eq!(old_stack_pointer.wrapping_sub(2), cpu.stack_pointer);
+        }
+    }
+
+    #[test]
+    fn test_pop_into_register(){
+        for target in PushPopTarget::iter() {
+            let mut cpu = CPU::new();
+            let mut value = u16::random();
+            let sp = u16::random();
+            cpu.stack_pointer = sp;
+            if target == PushPopTarget::AF {
+                value = value & AF_BIT_MASK;
+            }
+            cpu.bus.write_word(sp, value);
+
+            cpu.pop_into_register(target);
+
+            assert_eq!(value, cpu.get_push_pop_target_value(target));
+            assert_eq!(sp.wrapping_add(2), cpu.stack_pointer);
         }
     }
 }
