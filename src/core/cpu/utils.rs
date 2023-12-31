@@ -1,5 +1,5 @@
 use crate::core::cpu::base::CPU;
-use crate::core::instructions::definitions::{RegisterTarget, RegisterTarget16};
+use crate::core::instructions::definitions::{PushPopTarget, RegisterTarget, RegisterTarget16};
 use crate::util::join_u8;
 
 impl CPU{
@@ -45,7 +45,6 @@ impl CPU{
 
     pub (super) fn get_register_value_16(&mut self, target: RegisterTarget16) -> u16 {
         match target {
-            RegisterTarget16::AF => self.registers.get_af(),
             RegisterTarget16::BC => self.registers.get_bc(),
             RegisterTarget16::DE => self.registers.get_de(),
             RegisterTarget16::HL => self.registers.get_hl(),
@@ -55,11 +54,28 @@ impl CPU{
 
     pub (super) fn set_register_value_16(&mut self, target: RegisterTarget16, value: u16) {
         match target {
-            RegisterTarget16::AF => self.registers.set_af(value),
             RegisterTarget16::BC => self.registers.set_bc(value),
             RegisterTarget16::DE => self.registers.set_de(value),
             RegisterTarget16::HL => self.registers.set_hl(value),
             RegisterTarget16::SP => self.stack_pointer = value
+        }
+    }
+
+    pub (super) fn get_push_pop_target_value(&mut self, target: PushPopTarget) -> u16 {
+        match target {
+            PushPopTarget::AF => self.registers.get_af(),
+            PushPopTarget::BC => self.registers.get_bc(),
+            PushPopTarget::DE => self.registers.get_de(),
+            PushPopTarget::HL => self.registers.get_hl(),
+        }
+    }
+
+    pub (super) fn set_push_pop_target_value(&mut self, target: PushPopTarget, value: u16) {
+        match target {
+            PushPopTarget::AF => self.registers.set_af(value),
+            PushPopTarget::BC => self.registers.set_bc(value),
+            PushPopTarget::DE => self.registers.set_de(value),
+            PushPopTarget::HL => self.registers.set_hl(value)
         }
     }
 
@@ -70,7 +86,6 @@ mod test{
     use strum::IntoEnumIterator;
     use crate::core::cpu::base::CPU;
     use crate::core::instructions::definitions::{RegisterTarget, RegisterTarget16};
-    use crate::core::instructions::definitions::RegisterTarget16::AF;
     use crate::core::registers::AF_BIT_MASK;
     use crate::util::{join_u8, Randomizable};
 
@@ -147,10 +162,6 @@ mod test{
         }
         for target in RegisterTarget16::iter(){
             let mut val = u16::random();
-            if target == AF {
-                // Last 4 byte of F are never set
-                val = val & AF_BIT_MASK;
-            }
             cpu.set_register_value_16(target, val);
 
             assert_eq!(val, cpu.get_register_value_16(target));

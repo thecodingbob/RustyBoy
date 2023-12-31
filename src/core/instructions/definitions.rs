@@ -74,7 +74,7 @@ pub(crate) enum RegisterTarget {
 
 #[derive(Debug, Clone, Copy, EnumIter, PartialEq, Hash)]
 pub(crate) enum RegisterTarget16 {
-    AF, BC, DE, HL, SP
+    BC, DE, HL, SP
 }
 
 #[derive(Debug, Clone, Copy, EnumIter, PartialEq, Hash)]
@@ -90,14 +90,3 @@ pub(crate) enum JumpCondition {
     Carry
 }
 
-
-impl From<PushPopTarget> for RegisterTarget16 {
-    fn from(value: PushPopTarget) -> Self {
-        match value {
-            PushPopTarget::AF => RegisterTarget16::AF,
-            PushPopTarget::BC => RegisterTarget16::BC,
-            PushPopTarget::DE => RegisterTarget16::DE,
-            PushPopTarget::HL => RegisterTarget16::HL
-        }
-    }
-}
