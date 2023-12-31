@@ -1,5 +1,7 @@
 use crate::util::{join_u8, split_u16};
 
+pub(super) const AF_BIT_MASK: u16 = 0xFF0;
+
 const ZERO_FLAG_BYTE_POSITION: u8 = 7;
 const SUBTRACT_FLAG_BYTE_POSITION: u8 = 6;
 const HALF_CARRY_FLAG_BYTE_POSITION: u8 = 5;

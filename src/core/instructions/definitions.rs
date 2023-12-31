@@ -60,7 +60,7 @@ pub(crate) enum Instruction {
     // Load to the 16-bit SP register, data from the 16-bit HL register.
     LoadStackPointerFromHl,
     // Push to the stack memory, data from the 16-bit register rr.
-    PushFromRegister(RegisterTarget16),
+    PushFromRegister(PushPopTarget),
     // Unconditional jump to the nn address (indirect pc)
     JumpToNn,
     // Jumps to the nn address (indirect pc) if the JumpCondition is satisfied
@@ -68,20 +68,36 @@ pub(crate) enum Instruction {
 }
 
 #[derive(Debug, Clone, Copy, EnumIter, PartialEq, Hash)]
-pub (crate) enum RegisterTarget {
+pub(crate) enum RegisterTarget {
     A, B, C, D, E, H, L
 }
 
 #[derive(Debug, Clone, Copy, EnumIter, PartialEq, Hash)]
 pub(crate) enum RegisterTarget16 {
-    BC, DE, HL
+    AF, BC, DE, HL, SP
+}
+
+#[derive(Debug, Clone, Copy, EnumIter, PartialEq, Hash)]
+pub(crate) enum PushPopTarget {
+    AF, BC, DE, HL
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Hash)]
-pub (crate) enum JumpCondition {
+pub(crate) enum JumpCondition {
     NotZero,
     Zero,
     NotCarry,
     Carry
 }
 
+
+impl From<PushPopTarget> for RegisterTarget16 {
+    fn from(value: PushPopTarget) -> Self {
+        match value {
+            PushPopTarget::AF => RegisterTarget16::AF,
+            PushPopTarget::BC => RegisterTarget16::BC,
+            PushPopTarget::DE => RegisterTarget16::DE,
+            PushPopTarget::HL => RegisterTarget16::HL
+        }
+    }
+}

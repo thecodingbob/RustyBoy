@@ -1,5 +1,5 @@
 use crate::core::cpu::base::CPU;
-use crate::core::instructions::definitions::RegisterTarget16;
+use crate::core::instructions::definitions::{PushPopTarget, RegisterTarget16};
 
 impl CPU {
     pub(super) fn load_register16_nn(&mut self, target: RegisterTarget16) {
@@ -18,9 +18,9 @@ impl CPU {
         self.stack_pointer = hl_value;
     }
 
-    pub(super) fn push_from_register(&mut self, source: RegisterTarget16) {
+    pub(super) fn push_from_register(&mut self, source: PushPopTarget) {
         let new_stack_pointer = self.stack_pointer.wrapping_sub(2);
-        let value = self.get_register_value_16(source);
+        let value = self.get_register_value_16(RegisterTarget16::from(source));
         self.bus.write_word(new_stack_pointer, value);
         self.stack_pointer = new_stack_pointer;
     }
@@ -32,14 +32,19 @@ impl CPU {
 mod test{
     use strum::IntoEnumIterator;
     use crate::core::cpu::base::CPU;
-    use crate::core::instructions::definitions::RegisterTarget16;
+    use crate::core::instructions::definitions::{PushPopTarget, RegisterTarget16};
+    use crate::core::instructions::definitions::RegisterTarget16::AF;
+    use crate::core::registers::AF_BIT_MASK;
     use crate::util::{Randomizable, split_u16};
 
     #[test]
     fn test_load_register16_nn(){
         for receiver in RegisterTarget16::iter() {
             let mut cpu = CPU::new();
-            let value = u16::random();
+            let mut value = u16::random();
+            if receiver == AF {
+                value = value & AF_BIT_MASK;
+            }
             let (msb_value, lsb_value) = split_u16(value);
             let pc = u16::random();
             cpu.program_counter = pc;
@@ -83,11 +88,14 @@ mod test{
 
     #[test]
     fn test_push_from_register(){
-        for source in RegisterTarget16::iter() {
+        for source in PushPopTarget::iter() {
             let mut cpu = CPU::new();
-            let value = u16::random();
+            let mut value = u16::random();
+            if source == PushPopTarget::AF {
+                value = value & AF_BIT_MASK;
+            }
             let old_stack_pointer = cpu.stack_pointer;
-            cpu.set_register_value_16(source, value);
+            cpu.set_register_value_16(RegisterTarget16::from(source), value);
 
             cpu.push_from_register(source);
 

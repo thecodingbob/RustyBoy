@@ -45,27 +45,24 @@ impl CPU{
 
     pub (super) fn get_register_value_16(&mut self, target: RegisterTarget16) -> u16 {
         match target {
+            RegisterTarget16::AF => self.registers.get_af(),
             RegisterTarget16::BC => self.registers.get_bc(),
             RegisterTarget16::DE => self.registers.get_de(),
-            RegisterTarget16::HL => self.registers.get_hl()
+            RegisterTarget16::HL => self.registers.get_hl(),
+            RegisterTarget16::SP => self.stack_pointer
         }
     }
 
     pub (super) fn set_register_value_16(&mut self, target: RegisterTarget16, value: u16) {
         match target {
+            RegisterTarget16::AF => self.registers.set_af(value),
             RegisterTarget16::BC => self.registers.set_bc(value),
             RegisterTarget16::DE => self.registers.set_de(value),
-            RegisterTarget16::HL => self.registers.set_hl(value)
+            RegisterTarget16::HL => self.registers.set_hl(value),
+            RegisterTarget16::SP => self.stack_pointer = value
         }
     }
 
-    fn get_8_bit_targets_from_16_bit_target(&mut self, target: RegisterTarget16) -> (RegisterTarget, RegisterTarget) {
-        match target {
-            RegisterTarget16::BC => (RegisterTarget::B, RegisterTarget::C),
-            RegisterTarget16::DE => (RegisterTarget::D, RegisterTarget::E),
-            RegisterTarget16::HL => (RegisterTarget::H, RegisterTarget::L)
-        }
-    }
 }
 
 #[cfg(test)]
@@ -73,7 +70,9 @@ mod test{
     use strum::IntoEnumIterator;
     use crate::core::cpu::base::CPU;
     use crate::core::instructions::definitions::{RegisterTarget, RegisterTarget16};
-    use crate::util::{join_u8, Randomizable, split_u16};
+    use crate::core::instructions::definitions::RegisterTarget16::AF;
+    use crate::core::registers::AF_BIT_MASK;
+    use crate::util::{join_u8, Randomizable};
 
     #[test]
     fn test_read_and_increment_pc(){
@@ -141,34 +140,21 @@ mod test{
     }
 
     #[test]
-    fn test_get_register_value_16(){
+    fn test_get_set_register_value_16(){
         let mut cpu = CPU::new();
         for target in RegisterTarget16::iter(){
             assert_eq!(0x0, cpu.get_register_value_16(target));
         }
         for target in RegisterTarget16::iter(){
-            let val = u16::random();
-            let (msb, lsb) = split_u16(val);
-            let (msb_target, lsb_target) = cpu.get_8_bit_targets_from_16_bit_target(target);
-            cpu.set_register_value(msb_target, msb);
-            cpu.set_register_value(lsb_target, lsb);
-
-            assert_eq!(val, cpu.get_register_value_16(target));
-        }
-    }
-
-    #[test]
-    fn test_set_register_value_16(){
-        let mut cpu = CPU::new();
-        for target in RegisterTarget16::iter(){
-            assert_eq!(0x0, cpu.get_register_value_16(target));
-        }
-        for target in RegisterTarget16::iter(){
-            let val = u16::random();
-
+            let mut val = u16::random();
+            if target == AF {
+                // Last 4 byte of F are never set
+                val = val & AF_BIT_MASK;
+            }
             cpu.set_register_value_16(target, val);
 
             assert_eq!(val, cpu.get_register_value_16(target));
         }
     }
+
 }
